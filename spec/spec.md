@@ -168,19 +168,18 @@ A compliant schema for a dossier:
         "$id": "https://example.org/schemas/acdc-minimum.json",
         "title": "Mortgage Creditworthiness Dossier",
         "description": "Evidence of a borrower's qualification for a mortgage.",
-        "properties": {
-            "allOf": [
-                { 
-                    "description": "reference to dossier base schema",
-                    "$ref": "EBLnGaNHgEnOvMDqnQO8lpzPQqfZRxC_Rdoinii5buGz" },
-                {
-                    "type": "object",
-                    "description": "add properties unique to this dossier in next obj"
-                    "properties": {
-                    }
+        "allOf": [
+            { 
+                "description": "reference to dossier base schema",
+                "$ref": "EBLnGaNHgEnOvMDqnQO8lpzPQqfZRxC_Rdoinii5buGz"
+            },
+            {
+                "type": "object",
+                "description": "add properties unique to this dossier in next obj",
+                "properties": {
                 }
-            ]
-        }
+            }
+        ]
     }
     ```
 
