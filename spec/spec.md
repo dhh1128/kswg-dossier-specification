@@ -2,7 +2,7 @@
 Verifiable Dossiers
 ================================================
 
-**Specification Status**: v0.4 Draft
+**Specification Status**: v0.6 Draft
 
 **Latest Draft:**
 
