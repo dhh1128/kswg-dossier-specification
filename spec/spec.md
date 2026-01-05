@@ -138,6 +138,12 @@ In addition the following terms are defined normatively, here:
 * Annotation Edge: An edge in a dossier version that points to a specific edge or artifact in a previous version of the same dossier, typically used to modify its status or apply a procedural ruling (e.g., objection, admission) without altering the immutable history.
 * Temporal Pinning: The process of observing dynamic state (such as a bank balance or API result) at a specific moment in time and wrapping it in a verifiable, static attestation that can be referenced by the dossier.
 * Predicate Edge: An edge that references a Zero-Knowledge Proof (ZKP) or a derived cryptographic claim rather than the raw evidence itself, used to prove eligibility or factual status without revealing underlying sensitive data.
+* Curator: The entity responsible for the iterative assembly of evidence artifacts and the definition of a dossier's initial data structure.
+* Proposer: The entity that initiates a joint issuance action and coordinates the collection of endorsements or signatures from participant autonomic identifiers.
+* Finalizer: An entity that observes the satisfaction of a joint issuance threshold and anchors the resulting proofs in a key event log to simplify verification for external parties.
+* `thr` (threshold operator): An m-ary operator used within an edge group to define the cumulative weight of signatures or seals required to satisfy a joint issuance requirement.
+* `fin` (finalization operator): An operator that signals the intended presence of a finalization event in a key event log, serving as a hint to verifiers regarding the proof structure.
+* `rev` (revocation operator): An operator used to define a specific threshold for revoking a dossier, which may be configured independently of the issuance threshold.
 
 [//]: # (Dossier Data Model {#sec:content})
 
@@ -247,21 +253,23 @@ A reference (e.g., a URL) to the verification policy or governance framework tha
 
 The dossier is a persistent, evolving data artifact with a distinct lifecycle encompassing curation, iterative assembly, state management, citation, and verification.
 
-### Curation: Assembling and Signing the Dossier
+### Curation: assembling and signing the dossier
 
-Curation is the process of creating a dossier. This phase is typically performed in advance of any real-time transaction and involves the assembly and attestation of the evidence collection.1
+Curation is the process of creating a dossier. This phase is typically performed in advance of any real-time transaction and involves the assembly and attestation of the evidence collection.
 
 The normative steps for dossier curation are as follows:
 
-1. **Evidence Acquisition**: The entity intending to issue the dossier first acquires the necessary evidence from their respective authoritative sources. For example, a business might obtain a legal entity vetting credential from a qualified issuer, a telephone number allocation credential from its carrier, and a brand credential from a brand vetter.1
+1. Evidence acquisition: the entity intending to issue the dossier first acquires the necessary evidence from their respective authoritative sources. For example, a business might obtain a legal entity vetting credential from a qualified issuer, a telephone number allocation credential from its carrier, and a brand credential from a brand vetter.
 
-2. **Assembly**: The issuer constructs the dossier ACDC data structure. This involves creating an edges block and populating it with named links that point to each acquired evidence artifact, as described in Section 3.
+2. Assembly: the issuer or curator constructs the dossier ACDC data structure. This involves creating an edges block and populating it with named links that point to each acquired evidence artifact.
 
-3. **Iterative Assembly and Versioning**: Dossiers are rarely static. As new evidence is collected or the status of investigation changes, the dossier evolves. To support this, issuers MAY issue new versions of a dossier. A new version MUST be a valid ACDC that links to the previous version via a `prev` edge (or a schema-specific equivalent). This creates a verifiable chain of the dossier's history, allowing verifiers to traverse back through the lineage of the evidence collection.
+3. Iterative assembly and versioning: dossiers are rarely static. As new evidence is collected or the status of investigation changes, the dossier evolves. To support this, curators may issue new versions of a dossier. A new version must be a valid ACDC that links to the previous version via a prev edge or a schema-specific equivalent. This creates a verifiable chain of the dossier's history, allowing verifiers to traverse back through the lineage of the evidence collection.
 
-4. **Signing and Anchoring**: The issuer uses the private key(s) associated with its KERI AID to sign the fully assembled dossier ACDC. This act of signing creates a non-repudiable attestation to the dossier's content. The issuance event, including the signature, is then anchored in the issuer's Key Event Log (KEL), providing a permanent, verifiable record.
+4. Issuance initiation: for single-issuer dossiers, the curator signs the fully assembled dossier ACDC. For joint issuance, the curator provides the drafted ACDC to a proposer. The proposer then coordinates the signing or anchoring process among the designated members.
 
-5. **Publication**: The issuer publishes the signed dossier ACDC at a stable, publicly resolvable location, typically one or more HTTP URLs. This allows authorized verifiers to fetch the dossier when it is cited.1
+5. Signing and anchoring: the curator or finalizer uses the private keys associated with a KERI AID to sign the dossier. This act creates a non-repudiable attestation to the dossier's content. The issuance event is then anchored in a key event log (KEL), providing a permanent record. In joint issuance, this anchor may be distributed across several KELs or consolidated in a finalization event.
+
+6. Publication: the issuer or proposer publishes the signed dossier ACDC at a stable, publicly resolvable location, typically one or more HTTP URLs. This allows authorized verifiers to fetch the dossier when it is cited.
 
 ### State Management and Metadata Overlays
 
@@ -286,84 +294,121 @@ Because dossiers are designed to be stable, long-lived, and potentially large da
 
 A citation is a reference that allows a verifier to locate and retrieve the full dossier. The normative requirement for a dossier citation is that it MUST be a resolvable identifier that enables a verifier to fetch the complete and unmodified dossier ACDC. The canonical implementation of this is the Out-of-Band Invitation (OOBI) URL used in the evd (evidence) claim of a VVP passport. An OOBI is a specialized URL that points to a resource serving the ACDC and its associated KERI proofs.
 
-### Verification: Algorithm for Validation
+### Verification: algorithm for validation
 
-Verification is the process by which a recipient of a dossier citation validates the dossier and its entire graph of evidence. The following normative algorithm, generalized from the process described in the VVP specification, outlines the required steps for a compliant verifier.1
+The verification process for a dossier requires a citation and a referenceTime as inputs. To support joint issuance, the algorithm follows these steps:
 
-The algorithm requires two inputs: the dossier citation and a referenceTime (which may be the current time for real-time validation or a time in the past for historical analysis).
+1. Fetch dossier: resolve the citation to retrieve the dossier ACDC.
 
-1. **Fetch Dossier**: Resolve the dossier citation (e.g., the OOBI URL) to retrieve the full dossier ACDC.
-2. **Validate Dossier Integrity and Signature**:
+2. Validate dossier integrity: calculate the SAID of the retrieved data and ensure it matches the expected SAID from the citation.
 
-    1. Calculate the SAID of the retrieved data and verify that it matches the SAID expected from the citation, if available.
-    2. Retrieve the issuer's KEL.
-    3. Verify the signature on the dossier against the issuer's public key(s) that were authoritative at the referenceTime, as determined by the KEL.
+3. Determine issuance model: inspect the edges block for the fin operator or m-ary thr operator.
 
-3. **Recursive Graph Traversal and Validation**: For each named edge in the dossier's edges block:
+4. Validate signatures and anchors:
+   a. If the fin operator is present, locate the finalization event in the primary KEL. Verify that the event contains the required threshold-satisfying signatures or seals.
+   b. If the fin operator is absent but a thr operator is present, identify the member AIDs defined in the threshold group. Fetch the individual KEL for each member and verify that a valid seal to the dossier SAID exists in each KEL. Confirm that the total weight of verified members meets the threshold defined in the thr operator.
+   c. For standard dossiers with a single issuer, retrieve the issuer KEL and verify the signature against the public keys authoritative at the referenceTime.
 
-    1. Fetch the referenced evidence artifact (e.g., another ACDC).
-    2. Validate the integrity and signature of the artifact in the same manner as the dossier, using its issuer's KEL and the referenceTime.
-    3. If the fetched artifact itself contains links to further evidence (e.g., a vetting credential linking to the credential of its issuer), recursively perform this validation step for all nodes in the evidence graph.
-   
-4. **Check Revocation Status**: For the dossier itself and for every verifiable artifact in its evidence graph, check for any revocation events that are effective as of the referenceTime. This check MUST be performed by consulting the issuer's KEL or a designated status registry specified within the artifact.1
-5. **Apply Semantic Rules**: After successful cryptographic validation of the entire evidence graph, the verifier MUST apply any application-specific business logic or policy rules. Examples include: confirming that a TNAlloc credential covers the specific phone number used in a call, or that a delegation credential authorizes the specific action being performed.
+5. Recursive graph traversal: for each named edge in the edges block, fetch the referenced artifact and perform this validation algorithm recursively.
 
-This rigorous verification process reveals a key architectural principle of systems using dossiers: the "root of trust" is not a single, centralized entity. Instead, it is a set of issuer AIDs that the verifier must trust for specific types of claims. A verifier of a VVP dossier, for instance, must trust the issuer of the legal entity credential, the telecom regulator that anchors the telephone number allocation chain, and the brand vetter. This decentralizes not only the data but also the trust decisions themselves. Consequently, a critical component of any compliant verifier implementation is a configurable root-of-trust policy.
+6. Check revocation status: for the dossier and every node in the evidence graph, consult the relevant KELs or status registries for revocation events effective at the referenceTime.
 
-## Security Considerations
+7. Apply semantic rules: apply application-specific policy rules once cryptographic validation is complete.
 
-### Integrity and Non-Repudiation via KERI
+## Joint issuance
+
+### Joint issuance logic
+Joint issuance is a model for authorizing a dossier through asynchronous coordination. Unlike group multisig, which requires synchronous agreement on key event log (KEL) sequence numbers, joint issuance relies on logic within the ACDC layer. This allows members to contribute signatures or seals to a dossier at different times and via different channels without immediate impact on a shared KEL.
+
+The validity of a jointly issued dossier is determined by the satisfaction of a threshold operator within its edge graph. The logic is decoupled from key management. This permits higher flexibility in how issuance is achieved and verified.
+
+### Roles
+Joint issuance involves specific roles that may be performed by the same or different entities:
+
+* curator: the entity that assembles the evidence artifacts and defines the initial dossier structure.
+* proposer: the entity that initiates the issuance action and distributes the candidate dossier for endorsement.
+* finalizer: any entity that, upon observing that an issuance threshold is met, submits a finalization event to a KEL.
+
+### Threshold mechanics
+A joint issuance must satisfy an m-ary threshold operator defined in the edge section of the dossier ACDC. A schema may define the required threshold and the set of possible signers. Alternatively, a schema may defer these definitions to the dossier instance, allowing the threshold rules to be actualized only when the issuance is proposed.
+
+### New operators for joint issuance
+The following operators are defined to support the logic of joint issuance within the edges block:
+
+* thr: a threshold operator that defines the cumulative weight of signatures or seals required to satisfy the issuance.
+* fin: a finalization operator that signals whether a verifier should expect a finalization event in a KEL.
+* rev: a revocation operator that defines the threshold required to revoke the dossier, which may differ from the issuance threshold.
+
+### Finalization
+A proposer may choose to finalize a joint issuance to assist verifiers that do not perform recursive graph traversal.
+
+1. Satisfaction: a finalizer observes that a sufficient number of signatures or seals have been gathered to meet the threshold.
+2. Allocation: the finalizer allocates the next sequence number in the relevant KEL, which is typically a group AID.
+3. Anchoring: the finalizer attaches the threshold-satisfying proofs to a KEL event and submits it for witnessing.
+
+If a finalization event is present, a verifier should use it as the definitive proof of issuance. If absent, a verifier must poll the individual KELs of all possible participants to determine if the threshold has been met.
+
+### Revocation
+Revocation logic in a joint issuance may be defined independently of issuance logic.
+
+* Default: if no separate revocation rule is defined, the threshold required to revoke a dossier is identical to the threshold required to issue it.
+* Asymmetric thresholds: a dossier may specify different operators for creation and revocation. For example, a dossier may require a majority for issuance but allow a single administrative AID to perform a revocation.
+
+## Security considerations
+
+### Integrity and non-repudiation via KERI
 
 The security of the dossier model is founded on the cryptographic primitives provided by KERI and ACDC.
-Integrity: The integrity of the dossier and all ACDC-native evidence within its graph is guaranteed by the use of Self-Addressing Identifiers (SAIDs). A SAID is a cryptographic hash of an object's canonical content. Any modification to the data, no matter how small, will result in a different SAID, making tampering immediately and computationally evident.1
 
-Non-Repudiation: The act of issuing a dossier is made non-repudiable by the issuer's digital signature. This signature is cryptographically anchored in the issuer's Key Event Log (KEL), which serves as a permanent, publicly auditable, and tamper-evident log of all significant actions taken by the identifier, including issuances, rotations, and revocations.1
+Integrity: the integrity of the dossier and all ACDC-native evidence within its graph is guaranteed by the use of self-addressing identifiers (SAIDs). A SAID is a cryptographic hash of an object's canonical content. Any modification to the data results in a different SAID, making tampering immediately evident.
 
-### Replay Attack Mitigation in Citation Protocols
+Non-repudiation: the act of issuing a dossier is made non-repudiable by digital signatures. These signatures are cryptographically anchored in a key event log (KEL), which serves as a permanent, publicly auditable, and tamper-evident log of all significant actions. In joint issuance, non-repudiation is achieved through the collective anchors of all participating members in their respective KELs. A finalization event, if used, provides a single cryptographic record of this consensus.
 
-The dossier itself is a stable, long-lived artifact designed for reuse. As such, the primary risk of replay attacks exists not at the level of the dossier, but at the level of the protocol that cites it. An attacker could capture a valid citation message and re-submit it in a different context.
+### Replay attack mitigation in citation protocols
 
-To mitigate this, any protocol that cites a dossier MUST incorporate ephemeral, context-specific data into the payload that is cryptographically signed. This data MUST bind the citation to a unique transaction. The VVP passport provides a canonical example of this practice, including the following in its signed JWT payload 1:
+The dossier itself is a stable, long-lived artifact designed for reuse. As such, the primary risk of replay attacks exists at the level of the protocol that cites it. An attacker could capture a valid citation message and re-submit it in a different context.
 
-* `iat` (Issued At) and exp (Expiration) timestamps to create a narrow window of validity.
-orig (originator) and dest (destination) identifiers to bind the call to specific parties.
-* `jti` (JWT ID), a unique nonce to prevent identical replays within the validity window.
+To mitigate this, any protocol that cites a dossier must incorporate ephemeral, context-specific data into the payload that is cryptographically signed. This data must bind the citation to a unique transaction using timestamps to create a narrow window of validity, originator and destination identifiers, and unique nonces to prevent identical replays.
 
-### Verifier Trust and Root of Trust Management
+### Verifier trust and root of trust management
 
-As established in Section 4.3, the dossier model operates on a decentralized root of trust. A verifier does not rely on a single authority but must make explicit trust decisions about a plurality of evidence issuers. The security of the overall system is therefore contingent on the verifier's ability to manage its trust policies securely.
+The dossier model operates on a decentralized root of trust. A verifier does not rely on a single authority but makes explicit trust decisions about a plurality of evidence issuers. In joint issuance, this trust is distributed across the member AIDs defined in the threshold.
 
-The foundation of this trust is the KERI protocol's witness infrastructure. Witnesses are independent services that act as notaries for an AID's KEL. By requiring an issuer to report its key events to a set of witnesses, the system gains high availability and, crucially, duplicity detection. If an issuer attempts to present two different versions of its key history to different parties, the discrepancy will be detectable by querying the witnesses. Verifiers SHOULD consult multiple witnesses to ensure they have a consistent and complete view of an issuer's KEL, thereby protecting against duplicity and compromise.1
+The foundation of this trust is the KERI witness infrastructure. Witnesses are independent services that act as notaries for an AID's KEL. By requiring an issuer to report its key events to a set of witnesses, the system gains high availability and duplicity detection. Verifiers should consult multiple witnesses to ensure they have a consistent and complete view of an issuer's KEL, thereby protecting against duplicity and compromise.
 
-### Long-Term Auditability and Historical Analysis
+### Long-term auditability and historical analysis
 
-A key security feature of the KERI-based dossier ecosystem is its inherent support for robust, long-term auditing. Because KELs provide a complete, verifiable, and sequenced history of an identifier's key state, a verifier can perform validation not just for the present moment, but for any arbitrary point in the past.1
+The KERI-based dossier ecosystem supports robust, long-lived auditing. Because KELs provide a complete, verifiable, and sequenced history of an identifier's key state, a verifier can perform validation for any arbitrary point in the past. 
 
-This capability is critical for use cases involving compliance, legal discovery, and post-incident forensic analysis. An auditor can ask not only, "Is this dossier valid now?" but also, "Was this dossier and its entire evidence graph valid at the time of the transaction, based on the key states and revocation information known at that moment?" This provides a level of non-repudiable historical accountability that is difficult or impossible to achieve in systems that rely on ephemeral key state or certificates with fixed expiration dates.
+This capability is critical for use cases involving compliance and legal discovery. An auditor can determine if a dossier and its entire evidence graph were valid at the time of a transaction, based on the key states and revocation information known at that moment. This provides non-repudiable historical accountability.
 
-## Privacy Considerations
+## Privacy considerations
 
-### Graduated Disclosure Mechanism
+### Graduated disclosure mechanism
 
-Dossiers MUST support privacy-preserving disclosure of their contents through the graduated disclosure mechanism inherent to the ACDC specification. This mechanism is analogous to a Merkle tree. An ACDC is a hierarchical JSON object, and its SAID is computed recursively: the hash of a parent object is derived from its scalar values and the hashes (SAIDs) of its child objects.1
+Dossiers must support privacy-preserving disclosure of their contents through the graduated disclosure mechanism inherent to the ACDC specification. An ACDC is a hierarchical JSON object, and its SAID is computed recursively: the hash of a parent object is derived from its scalar values and the SAIDs of its child objects.
 
-This structure means that any child object within an ACDC can be replaced by its SAID without altering the SAID of the parent object and, critically, without invalidating the digital signature on the entire container. This allows the holder or issuer of a dossier to generate "compacted" or "redacted" versions of the ACDC. These compacted versions can selectively hide sensitive information while remaining cryptographically verifiable. For example, a dossier could link to a full vetting credential containing a legal name and address. For a specific interaction, the holder could present a compacted version of that credential that reveals only the legal name but replaces the address object with its SAID. A verifier can still validate the signature on the credential and confirm that the redacted information exists, without having access to the sensitive address data itself.
+This structure means that any child object within an ACDC can be replaced by its SAID without altering the SAID of the parent object and without invalidating the digital signature on the entire container. This allows the holder or issuer of a dossier to generate redacted versions of the ACDC. These versions selectively hide sensitive information while remaining cryptographically verifiable. In joint issuance, redaction does not affect the validity of member seals anchored in KELs, as those seals point to the immutable SAID of the root dossier.
 
-### Analysis of Data Correlation Vectors
-Even with the use of graduated disclosure, verifiers may be able to correlate a party's activity across multiple transactions by observing persistent identifiers. The primary correlation vectors in a dossier-based protocol are 1:
+### Analysis of data correlation vectors
 
-* Dossier SAID: The SAID of the dossier itself (e.g., as carried in an evd claim) is a unique and persistent identifier for that specific evidence collection, and by extension, its issuer.
-* Citation Signer AID: The AID of the entity signing the real-time citation message (e.g., the kid in a VVP passport) can be used to link all messages signed by that same identifier.
-* Explicit Brand Information: Any unredacted brand information (e.g., in a card claim) is an obvious and intentional correlator.
+Even with the use of graduated disclosure, verifiers may be able to correlate activity across multiple transactions by observing persistent identifiers. The primary correlation vectors in a dossier-based protocol are:
 
-### Mitigation Strategies for Unwanted Correlation
-Where privacy is a requirement, implementers SHOULD employ strategies to mitigate these correlation vectors.
-For the Citation Signer AID: The AID used for signing transactional messages (the kid in VVP) often represents automated software rather than a legal entity. This AID can be rotated frequently without affecting the long-lived AID of the dossier issuer. Furthermore, a service provider signing on behalf of many clients can maintain a pool of AIDs, using different ones for different clients or transactions to provide a degree of herd privacy and break correlation.1
+* Dossier SAID: the SAID of the dossier itself is a unique and persistent identifier for that specific evidence collection.
+* Citation signer AID: the AID of the entity signing the real-time citation message can be used to link all messages signed by that same identifier.
+* Explicit brand information: any unredacted brand information is an intentional correlator.
 
-For the Dossier SAID: To break the link between a transaction and a persistent dossier SAID, a trusted third party, or "VP Blinding Service," may be introduced. This service can verify an original dossier and then issue a new, short-lived, derivative dossier. This derivative dossier attests to the validity of the original without revealing its SAID to the end verifier. The verifier trusts the blinding service's attestation. This pattern enhances privacy at the cost of reintroducing a trusted intermediary for a specific function.1
+### Mitigation strategies for unwanted correlation
 
-### Contractually Protected Disclosure
-Technical privacy mechanisms can be augmented with legal and contractual controls. A server hosting a dossier MAY be configured to enforce access control policies. For example, it could serve a compacted, privacy-preserving version of a dossier to any anonymous request but require a cryptographically signed request to access a more expanded version. The act of signing the request can be tied to the verifier's agreement to a set of terms and conditions regarding data privacy, use, and re-sharing. This approach creates a verifiable audit trail of who accessed sensitive information and contractually binds them to specific data handling policies, combining technical enforcement with legal accountability.1
+Where privacy is a requirement, implementers should employ strategies to mitigate these correlation vectors.
+
+For the citation signer AID: the AID used for signing transactional messages can be rotated frequently without affecting the long-lived AID of the dossier issuer. Furthermore, a service provider signing on behalf of many clients can maintain a pool of AIDs to provide herd privacy and break correlation.
+
+For the dossier SAID: to break the link between a transaction and a persistent dossier SAID, a trusted third party or blinding service may be used. This service can verify an original dossier and then issue a new, short-lived, derivative dossier. This derivative dossier attests to the validity of the original without revealing its SAID to the end verifier.
+
+### Contractually protected disclosure
+
+Technical privacy mechanisms can be augmented with legal and contractual controls. A server hosting a dossier may be configured to enforce access control policies. For example, it could serve a redacted, privacy-preserving version of a dossier to any anonymous request but require a cryptographically signed request to access a more expanded version. The act of signing the request can be tied to the verifier's agreement to terms regarding data privacy, creating a verifiable audit trail of who accessed sensitive information.
 
 ## Use Cases and Architectural Patterns
 
@@ -417,6 +462,15 @@ This profile introduces the **Predicate Dossier** pattern, essential for environ
 * **Mechanism:** Instead of linking to a raw evidence file (e.g., `blood_test_results.pdf`), the dossier links to a **Predicate Edge**. This edge points to a Zero-Knowledge Proof (ZKP) or a derived cryptographic claim generated from the raw data.
     * *Example:* The dossier asserts `inclusion_criteria_met: true`. The evidence is a ZKP proving that "Subject Age > 18 AND HIV_Status == Positive" without revealing the subject's birthdate or specific medical markers.
 * **Verification:** The verifier validates the cryptographic proof rather than parsing the document, enabling high-assurance compliance without data leakage.
+
+### The petition: the open-endorsement dossier
+
+This profile demonstrates the open-endorsement dossier pattern, designed for cases where the set of participants is large or cannot be fully enumerated at the start of the curation process.
+
+* goal: collect a threshold of endorsements from a distributed and potentially dynamic set of signers.
+* key concept: asynchronous threshold satisfaction. Unlike a standard multisig group that requires tight coordination among a fixed set of peers, this pattern allows any aid that satisfies the criteria defined in the dossier schema to contribute an endorsement.
+* mechanism: the proposer initiates the dossier and distributes the candidate acdc. participants signify their agreement by anchoring a seal to the dossier said in their individual kels. the dossier uses the thr operator to define the conditions for validity, such as a specific count of unique endorsements.
+* verification: a verifier confirms the dossier is valid by observing that the required number of individual kels contain the necessary seals. the proposer may choose to finalize the dossier once the target count is reached to simplify this check for third parties.
 
 [//]: # (\newpage)
 
