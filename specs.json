@@ -1,8 +1,8 @@
 {
     "specs": [
         {
-            "title": "Spec-Up-T Starterpack",
-            "description": "Create technical specifications in markdown. Based on the original Spec-Up, extended with Terminology tooling",
+            "title": "Verifiable Dossiers",
+            "description": "Define a standard way to build verifiable dossiers of evidence.",
             "author": "Trust over IP Foundation",
             "spec_directory": "./spec",
             "spec_terms_directory": "terms-definitions",
@@ -19,16 +19,10 @@
             "source": {
                 "host": "github",
                 "account": "trustoverip",
-                "repo": "spec-up-t-starter-pack",
+                "repo": "kswg-dossier-specification",
                 "branch": "main"
             },
             "external_specs": [
-                {
-                    "external_spec": "vLEI",
-                    "gh_page": "https://henkvancann.github.io/vlei-glossary/",
-                    "url": "https://github.com/henkvancann/vlei-glossary",
-                    "terms_dir": "spec/terms-definitions"
-                },
                 {
                     "external_spec": "KERISuite",
                     "gh_page": "https://weboftrust.github.io/kerisuite-glossary/",
@@ -39,12 +33,6 @@
                     "external_spec": "ToIP",
                     "gh_page": "https://glossary.trustoverip.org/",
                     "url": "https://github.com/trustoverip/ctwg-main-glossary",
-                    "terms_dir": "spec/terms-definitions"
-                },
-                {
-                    "external_spec": "GenIT",
-                    "gh_page": "https://trustoverip.github.io/ctwg-general-glossary/",
-                    "url": "https://github.com/trustoverip/ctwg-general-glossary",
                     "terms_dir": "spec/terms-definitions"
                 }
             ],
