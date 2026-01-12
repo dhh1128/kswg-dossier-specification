@@ -1,0 +1,2 @@
+# kwsg-dossiers-specification
+This repo contains markdown inputs to build a specification for Verifiable Dossiers. Have a look at the [rendered spec](https://trustoverip.github.io/kswg-dossier-specification/) to learn more. 
