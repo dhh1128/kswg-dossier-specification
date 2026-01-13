@@ -1,3 +1,3 @@
-[[def: predicate edge, predicate edges]]
+[[def: predicate-edge, predicate edge]]
 
 ~ An edge that references a Zero-Knowledge Proof (ZKP) or a derived cryptographic claim rather than the raw evidence itself, used to prove eligibility or factual status without revealing underlying sensitive data.

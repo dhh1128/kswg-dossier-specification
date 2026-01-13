@@ -105,13 +105,13 @@ Creation of a flexible collection of robustly linked, formally verifiable eviden
 [a]: https://www.rfc-editor.org/rfc/rfc2119.txt
 
 [b]. Smith, S., Griffin, K., Ed., and Trust Over IP Foundation, "Key Event Receipt Infrastructure (KERI)", January 2024.
-[b]: https://trustoverip.github.io/tswg-keri-specification/
+[b]: https://trustoverip.github.io/kswg-keri-specification/
 
 [c]. Smith, S., Feairheller, P., Griffin, K., Ed., and Trust Over IP Foundation, "Authentic Chained Data Containers (ACDC)", November 2023.
-[c]: https://trustoverip.github.io/tswg-acdc-specification/
+[c]: https://trustoverip.github.io/kswg-acdc-specification/
 
 [d]. Smith, S., Griffin, K., Ed., and Trust Over IP Foundation, "Composable Event Streaming Representation (CESR)", November 2023.
-[d]: https://trustoverip.github.io/tswg-cesr-specification/
+[d]: https://trustoverip.github.io/kswg-cesr-specification/
 
 [e]. JSON Schema Community, "JSON Schema Specification 2020-12", June 2022.
 [e]: https://json-schema.org/specification.
