@@ -24,8 +24,8 @@
             "external_specs": [
                 {
                     "external_spec": "KERISuite",
-                    "gh_page": "https://weboftrust.github.io/kerisuite-glossary/",
-                    "url": "https://github.com/weboftrust/kerisuite-glossary",
+                    "gh_page": "https://trustoverip.github.io/kerisuite-glossary/",
+                    "url": "https://github.com/trustoverip/kerisuite-glossary",
                     "terms_dir": "spec/terms-definitions"
                 },
                 {
