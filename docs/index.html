@@ -88,7 +88,7 @@ customElements.define("slide-panels",class extends HTMLElement{static get observ
       ],
       "source": "xref",
       "termId": "term:edge",
-      "lastUpdated": "2026-01-13T19:37:22.960Z"
+      "lastUpdated": "2026-01-13T19:41:57.778Z"
     },
     {
       "externalSpec": "KERISuite",
@@ -122,7 +122,7 @@ customElements.define("slide-panels",class extends HTMLElement{static get observ
       ],
       "source": "xref",
       "termId": "term:operator",
-      "lastUpdated": "2026-01-13T19:37:22.960Z",
+      "lastUpdated": "2026-01-13T19:41:57.778Z",
       "firstTrefAlias": "operator"
     }
   ]
@@ -522,32 +522,12 @@ IN NO EVENT WILL ANY ToIP PARTY BE LIABLE TO ANY OTHER PARTY FOR LOST PROFITS OR
 <h2 id="normative-references"><a class="toc-anchor d-print-none" href="#normative-references">§</a> Normative references</h2>
 <p>[a]. IETF RFC-2119 Key words for use in RFCs to Indicate Requirement Levels
 [a]: <a href="https://www.rfc-editor.org/rfc/rfc2119.txt">https://www.rfc-editor.org/rfc/rfc2119.txt</a></p>
-<p><a href="https://trustoverip.github.io/tswg-keri-specification/">b</a>. Smith, S., Griffin, K., Ed., and Trust Over IP Foundation, “Key Event Receipt Infrastructure (KERI)”, January 2024.
-&lt;&lt;&lt;&lt;&lt;&lt;&lt; HEAD
-<a href="https://trustoverip.github.io/tswg-keri-specification/">b</a>: <a href="https://trustoverip.github.io/kswg-keri-specification/">https://trustoverip.github.io/kswg-keri-specification/</a></p>
+<p>[b]. Smith, S., Griffin, K., Ed., and Trust Over IP Foundation, “Key Event Receipt Infrastructure (KERI)”, January 2024.
+[b]: <a href="https://trustoverip.github.io/kswg-keri-specification/">https://trustoverip.github.io/kswg-keri-specification/</a></p>
 <p>[c]. Smith, S., Feairheller, P., Griffin, K., Ed., and Trust Over IP Foundation, “Authentic Chained Data Containers (ACDC)”, November 2023.
 [c]: <a href="https://trustoverip.github.io/kswg-acdc-specification/">https://trustoverip.github.io/kswg-acdc-specification/</a></p>
-<h1 id="d-smith-s-griffin-k-ed-and-trust-over-ip-foundation-composable-event-streaming-representation-cesr-november-2023d-httpstrustoveripgithubiokswg-cesr-specification"><a class="toc-anchor d-print-none" href="#d-smith-s-griffin-k-ed-and-trust-over-ip-foundation-composable-event-streaming-representation-cesr-november-2023d-httpstrustoveripgithubiokswg-cesr-specification">§</a> [d]. Smith, S., Griffin, K., Ed., and Trust Over IP Foundation, “Composable Event Streaming Representation (CESR)”, November 2023.
-[d]: <a href="https://trustoverip.github.io/kswg-cesr-specification/">https://trustoverip.github.io/kswg-cesr-specification/</a></h1>
-<p>[c]. Smith, S., Feairheller, P., Griffin, K., Ed., and Trust Over IP Foundation, “Authentic Chained Data Containers (ACDC)”, November 2023.
-[c]: <a href="https://trustoverip.github.io/tswg-acdc-specification/">https://trustoverip.github.io/tswg-acdc-specification/</a></p>
 <p>[d]. Smith, S., Griffin, K., Ed., and Trust Over IP Foundation, “Composable Event Streaming Representation (CESR)”, November 2023.
-[d]: <a href="https://trustoverip.github.io/tswg-cesr-specification/">https://trustoverip.github.io/tswg-cesr-specification/</a></p>
-<blockquote>
-<blockquote>
-<blockquote>
-<blockquote>
-<blockquote>
-<blockquote>
-<blockquote>
-<p>upstream/main</p>
-</blockquote>
-</blockquote>
-</blockquote>
-</blockquote>
-</blockquote>
-</blockquote>
-</blockquote>
+[d]: <a href="https://trustoverip.github.io/kswg-cesr-specification/">https://trustoverip.github.io/kswg-cesr-specification/</a></p>
 <p>[e]. JSON Schema Community, “JSON Schema Specification 2020-12”, June 2022.
 [e]: <a href="https://json-schema.org/specification">https://json-schema.org/specification</a>.</p>
 <!-- file: terms-and-definitions-intro.md -->
@@ -736,7 +716,7 @@ c. For standard dossiers with a single issuer, retrieve the issuer KEL and verif
 <h2 id="joint-issuance"><a class="toc-anchor d-print-none" href="#joint-issuance">§</a> Joint issuance</h2>
 <h3 id="joint-issuance-logic"><a class="toc-anchor d-print-none" href="#joint-issuance-logic">§</a> Joint issuance logic</h3>
 <p>Joint issuance is a model for authorizing a dossier through asynchronous coordination. Unlike group multisig, which requires synchronous agreement on key event log (KEL) sequence numbers, joint issuance relies on logic within the ACDC layer. This allows members to contribute signatures or seals to a dossier at different times and via different channels without immediate impact on a shared KEL.</p>
-<p>The validity of a jointly issued dossier is determined by the satisfaction of a threshold operator within its edge graph. The logic is decoupled from key management. This permits higher flexibility in how issuance is achieved and verified.</p>
+<p>The validity of a jointly issued dossier is determined by the satisfaction of a <a class="term-reference" href="#term:threshold-operator">threshold-operator</a> within its <a class="term-reference" href="#term:edge">edge</a> graph. The logic is decoupled from key management. This permits higher flexibility in how issuance is achieved and verified.</p>
 <h3 id="roles"><a class="toc-anchor d-print-none" href="#roles">§</a> Roles</h3>
 <p>Joint issuance involves specific roles that may be performed by the same or different entities:</p>
 <ul>
@@ -872,24 +852,8 @@ c. For standard dossiers with a single issuer, retrieve the issuer KEL and verif
 [2]: <a href="https://trustoverip.github.io/kswg-acdc-specification/">https://trustoverip.github.io/kswg-acdc-specification/</a></p>
 <p>[3]. CESR
 [3]: <a href="https://trustoverip.github.io/kswg-cesr-specification/">https://trustoverip.github.io/kswg-cesr-specification/</a></p>
-<h1 id="4"><a class="toc-anchor d-print-none" href="#4">§</a> <a href="https://www.ietf.org/archive/id/draft-hardman-verifiable-voice-protocol-03.html">4</a>. Verifiable Voice Protocol
-&lt;&lt;&lt;&lt;&lt;&lt;&lt; HEAD
-<a href="https://www.ietf.org/archive/id/draft-hardman-verifiable-voice-protocol-03.html">4</a>: <a href="https://www.ietf.org/archive/id/draft-hardman-verifiable-voice-protocol-05.html">https://www.ietf.org/archive/id/draft-hardman-verifiable-voice-protocol-05.html</a></h1>
-<blockquote>
-<blockquote>
-<blockquote>
-<blockquote>
-<blockquote>
-<blockquote>
-<blockquote>
-<p>upstream/main</p>
-</blockquote>
-</blockquote>
-</blockquote>
-</blockquote>
-</blockquote>
-</blockquote>
-</blockquote>
+<p>[4]. Verifiable Voice Protocol
+[4]: <a href="https://www.ietf.org/archive/id/draft-hardman-verifiable-voice-protocol-05.html">https://www.ietf.org/archive/id/draft-hardman-verifiable-voice-protocol-05.html</a></p>
 
                 </article>
 

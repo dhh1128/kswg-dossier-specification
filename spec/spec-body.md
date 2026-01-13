@@ -173,7 +173,7 @@ The verification process for a dossier requires a citation and a referenceTime a
 ### Joint issuance logic
 Joint issuance is a model for authorizing a dossier through asynchronous coordination. Unlike group multisig, which requires synchronous agreement on key event log (KEL) sequence numbers, joint issuance relies on logic within the ACDC layer. This allows members to contribute signatures or seals to a dossier at different times and via different channels without immediate impact on a shared KEL.
 
-The validity of a jointly issued dossier is determined by the satisfaction of a threshold operator within its edge graph. The logic is decoupled from key management. This permits higher flexibility in how issuance is achieved and verified.
+The validity of a jointly issued dossier is determined by the satisfaction of a [[ref: threshold-operator, threshold operator]] within its [[ref: edge]] graph. The logic is decoupled from key management. This permits higher flexibility in how issuance is achieved and verified.
 
 ### Roles
 Joint issuance involves specific roles that may be performed by the same or different entities:
@@ -343,8 +343,4 @@ This profile demonstrates the open-endorsement dossier pattern, designed for cas
 [3]: https://trustoverip.github.io/kswg-cesr-specification/
 
 [4]. Verifiable Voice Protocol
-<<<<<<< HEAD
 [4]: https://www.ietf.org/archive/id/draft-hardman-verifiable-voice-protocol-05.html
-=======
-[4]: https://www.ietf.org/archive/id/draft-hardman-verifiable-voice-protocol-03.html
->>>>>>> upstream/main
