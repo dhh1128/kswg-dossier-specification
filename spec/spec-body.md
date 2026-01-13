@@ -343,4 +343,8 @@ This profile demonstrates the open-endorsement dossier pattern, designed for cas
 [3]: https://trustoverip.github.io/kswg-cesr-specification/
 
 [4]. Verifiable Voice Protocol
+<<<<<<< HEAD
 [4]: https://www.ietf.org/archive/id/draft-hardman-verifiable-voice-protocol-05.html
+=======
+[4]: https://www.ietf.org/archive/id/draft-hardman-verifiable-voice-protocol-03.html
+>>>>>>> upstream/main
