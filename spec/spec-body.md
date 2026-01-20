@@ -155,11 +155,11 @@ The verification process for a dossier requires a citation and a referenceTime a
 
 2. Validate dossier integrity: calculate the SAID of the retrieved data and ensure it matches the expected SAID from the citation.
 
-3. Determine issuance model: inspect the edges block for the fin [[ref: operator]] or m-ary thr operator.
+3. Determine issuance model: inspect the edges block for the fin [[ref: operator]] or m-ary mgrp operator.
 
 4. Validate signatures and anchors:
    a. If the fin operator is present, locate the finalization event in the primary KEL. Verify that the event contains the required threshold-satisfying signatures or seals.
-   b. If the fin operator is absent but a thr operator is present, identify the member AIDs defined in the threshold group. Fetch the individual KEL for each member and verify that a valid seal to the dossier SAID exists in each KEL. Confirm that the total weight of verified members meets the threshold defined in the thr operator.
+   b. If the fin operator is absent but a mgrp operator is present, identify the member AIDs defined in the threshold group. Fetch the individual KEL for each member and verify that a valid seal to the dossier SAID exists in each KEL. Confirm that the total weight of verified members meets the threshold defined in the mgrp operator.
    c. For standard dossiers with a single issuer, retrieve the issuer KEL and verify the signature against the public keys authoritative at the referenceTime.
 
 5. Recursive graph traversal: for each named edge in the edges block, fetch the referenced artifact and perform this validation algorithm recursively.
@@ -169,15 +169,21 @@ The verification process for a dossier requires a citation and a referenceTime a
 7. Apply semantic rules: apply application-specific policy rules once cryptographic validation is complete.
 
 ## Joint issuance
-It's entirely possible for a dossier to be assembled and signed by a single party. For example, an artist that wishes to collect cryptopgraphic evidence of their creations may do so without relying on any external party. However, many dossiers will combine asynchronous contributions from multiple parties. In such cases, signing the ACDC that references all the individual pieces of evidence is best managed with joint issuance. 
+It's possible for a dossier to be assembled and signed by a single party. For example, an artist that wishes to collect cryptopgraphic evidence of their creations may do so as a solo activity. However, many dossiers will snapshot evidence contributions from multiple parties, and will thus represent a group work product with some kind of aggregate approval mechanism. In such cases, signing the ACDC that references all the individual pieces of evidence is managed with joint issuance. 
 
 ### Logic
-Joint issuance is a model for approving a dossier through asynchronous coordination, possibly with significant elapsed time. Unlike group multisig, which requires synchronous agreement on key event log (KEL) sequence numbers, joint issuance relies on logic within the ACDC layer. This allows members to contribute signatures or seals to a dossier at different times and via different channels without immediate impact on a shared KEL.
+Joint issuance is best understood not as a single, uniform approach to approval, but as a family or style of approval strategies. It maps onto the problem domain of coordinated control in multi-agent systems, which has been formally studied in robotics, AI, military science, and similar fields. Three variants of cooperative control are regularly mentioned in the literature: [5, 6, 7]
+
+* leader-follower 
+* behavior-based control
+* virtual structures
+
+Approval of a dossier can be accomplished with any of these variants, and this specification normatively describes success using primitives that are relevant to all three. Our description below will focus on the leader-follower approach because it is the simplest to understand, and it lends itself to deterministic guarantees most easily. Regardless of the cooperative control mechanism that's chosen, the process involves asynchronous signing activity that converges on a common goal, possibly with significant elapsed time. Unlike group multisig, which requires synchronous agreement on key event log (KEL) sequence numbers, joint issuance relies on logic within the ACDC layer. This allows members to contribute signatures or seals to a dossier at different times and via different channels without immediate impact on a shared KEL.
 
 The validity of a jointly issued dossier is determined by the satisfaction of a [[ref: threshold-operator, threshold operator]] within its [[ref: edge]] graph. The logic is decoupled from key management. This permits higher flexibility in how issuance is achieved and verified.
 
-### Roles
-Joint issuance involves specific roles that may be performed by the same or different entities:
+### Leader-follower roles
+When joint issuance is coordinated with a leader-follower strategy, three distinct roles that may be performed by the same or different entities:
 
 * Collector: the entity that assembles the evidence artifacts and defines the initial dossier structure.
 * Coordinator: the entity that, once collection is finished, initiates the issuance action and distributes the candidate dossier for endorsement.
@@ -189,9 +195,9 @@ A joint issuance must satisfy an m-ary threshold operator defined in the edge se
 ### New operators for joint issuance
 The following operators are defined to support the logic of joint issuance within the edges block:
 
-* thr: a [[ref: threshold operator]] that defines the cumulative weight of signatures or seals required to satisfy the issuance.
-* fin: a [[ref: finalization operator]] that signals whether a verifier should expect a finalization event in a KEL.
-* rev: a [[ref: revocation operator]] that defines the threshold required to revoke the dossier, which may differ from the issuance threshold.
+* mgrp: a [[ref: threshold operator]] that defines the count of signatures or seals required to satisfy the issuance. This is <var>m</var> in an *m of n* scheme. The value of the corresponding <var>n</var> MAY be given by counting enumerated, potential signers in the edge group to which this operator attaches [TODO]. Alternatively, potential signers may be *qualified* rather than enumerated, by referencing schema that must be satisfied by ACDC-based proof from the signer. The latter behavior allows approvals that model signatures on a petition, for example, where X number of signatures must be gathered from qualified endorsers.
+* fin: a [[ref: finalization operator]] that signals whether a verifier should expect a finalization event in a KEL. Recording a finalization event in the KEL allows verifiers to predict where aggregate evidence may be collected for easy review. Without it, a verifier must collect evidence of joint issuance signatures from disparate locations.
+* rmgrp: a [[ref: revocation operator]] that has parallel semantics to `mgrp`, but defines the threshold required to revoke the dossier.
 
 ### Finalization
 A [[ref: coordinator]] MAY choose to finalize a joint issuance to assist verifiers that do not perform recursive graph traversal.
@@ -323,7 +329,7 @@ This profile demonstrates the open-endorsement dossier pattern, designed for cas
 
 * goal: collect a threshold of endorsements from a distributed and potentially dynamic set of signers.
 * key concept: asynchronous threshold satisfaction. Unlike a standard multisig group that requires tight coordination among a fixed set of peers, this pattern allows any aid that satisfies the criteria defined in the dossier schema to contribute an endorsement.
-* mechanism: the [[ref: coordinator]] initiates the dossier and distributes the candidate acdc. participants signify their agreement by anchoring a seal to the dossier said in their individual kels. the dossier uses the thr operator to define the conditions for validity, such as a specific count of unique endorsements.
+* mechanism: the [[ref: coordinator]] initiates the dossier and distributes the candidate acdc. participants signify their agreement by anchoring a seal to the dossier said in their individual kels. the dossier uses the mgrp operator to define the conditions for validity, such as a specific count of unique endorsements.
 * verification: a verifier confirms the dossier is valid by observing that the required number of individual kels contain the necessary seals. the [[ref: coordinator]] may choose to finalize the dossier once the target count is reached to simplify this check for third parties.
 
 [//]: # (\newpage)
@@ -345,3 +351,12 @@ This profile demonstrates the open-endorsement dossier pattern, designed for cas
 
 [4]. Verifiable Voice Protocol
 [4]: https://www.ietf.org/archive/id/draft-hardman-verifiable-voice-protocol-05.html
+
+[5]. Beard, Lawton, and Hadaegh
+[5]: Beard, R. W., Lawton, J., and Hadaegh, F. Y. 2001. A coordination architecture for spacecraft formation control. IEEE Transactions on Control Systems Technology 9, 6 (November 2001), 777–790. https://doi.org/10.1109/87.960341
+
+[6]. Oh, Park, and Ahn
+[6]: Oh, K.-K., Park, M.-C., and Ahn, H.-S. 2015. A survey of multi-agent formation control. Automatica 53 (March 2015), 424–440. https://doi.org/10.1016/j.automatica.2014.10.022
+
+[7]. Fax and Murray
+[7]: Fax, J. A., and Murray, R. M. 2004. Information flow and cooperative control of vehicle formations. IEEE Transactions on Automatic Control 49, 9 (September 2004), 1465–1476. https://doi.org/10.1109/TAC.2004.834433
