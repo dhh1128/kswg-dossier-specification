@@ -88,7 +88,7 @@ customElements.define("slide-panels",class extends HTMLElement{static get observ
       ],
       "source": "xref",
       "termId": "term:edge",
-      "lastUpdated": "2026-01-20T14:23:27.888Z"
+      "lastUpdated": "2026-01-20T14:59:52.635Z"
     },
     {
       "externalSpec": "KERISuite",
@@ -122,7 +122,7 @@ customElements.define("slide-panels",class extends HTMLElement{static get observ
       ],
       "source": "xref",
       "termId": "term:operator",
-      "lastUpdated": "2026-01-20T14:23:27.888Z",
+      "lastUpdated": "2026-01-20T14:59:52.635Z",
       "firstTrefAlias": "operator"
     }
   ]
@@ -695,12 +695,12 @@ IN NO EVENT WILL ANY ToIP PARTY BE LIABLE TO ANY OTHER PARTY FOR LOST PROFITS OR
 <p>Validate dossier integrity: calculate the SAID of the retrieved data and ensure it matches the expected SAID from the citation.</p>
 </li>
 <li>
-<p>Determine issuance model: inspect the edges block for the fin <a class="term-reference" href="#term:operator">operator</a> or m-ary mgrp operator.</p>
+<p>Determine issuance model: inspect the edges block for the fin <a class="term-reference" href="#term:operator">operator</a> or m-ary MGRP operator.</p>
 </li>
 <li>
 <p>Validate signatures and anchors:
 a. If the fin operator is present, locate the finalization event in the primary KEL. Verify that the event contains the required threshold-satisfying signatures or seals.
-b. If the fin operator is absent but a mgrp operator is present, identify the member AIDs defined in the threshold group. Fetch the individual KEL for each member and verify that a valid seal to the dossier SAID exists in each KEL. Confirm that the total weight of verified members meets the threshold defined in the mgrp operator.
+b. If the fin operator is absent but a MGRP operator is present, identify the member AIDs defined in the threshold group. Fetch the individual KEL for each member and verify that a valid seal to the dossier SAID exists in each KEL. Confirm that the total weight of verified members meets the threshold defined in the MGRP operator.
 c. For standard dossiers with a single issuer, retrieve the issuer KEL and verify the signature against the public keys authoritative at the referenceTime.</p>
 </li>
 <li>
@@ -736,9 +736,10 @@ c. For standard dossiers with a single issuer, retrieve the issuer KEL and verif
 <h3 id="new-operators-for-joint-issuance"><a class="toc-anchor d-print-none" href="#new-operators-for-joint-issuance">§</a> New operators for joint issuance</h3>
 <p>The following operators are defined to support the logic of joint issuance within the edges block:</p>
 <ul>
-<li>mgrp: a <a class="term-reference" href="#term:threshold-operator">threshold operator</a> that defines the count of signatures or seals required to satisfy the issuance. This is <var>m</var> in an <em>m of n</em> scheme. The value of the corresponding <var>n</var> MAY be given by counting enumerated, potential signers in the edge group to which this operator attaches [TODO]. Alternatively, potential signers may be <em>qualified</em> rather than enumerated, by referencing schema that must be satisfied by ACDC-based proof from the signer. The latter behavior allows approvals that model signatures on a petition, for example, where X number of signatures must be gathered from qualified endorsers.</li>
-<li>fin: a <a class="term-reference" href="#term:finalization-operator">finalization operator</a> that signals whether a verifier should expect a finalization event in a KEL. Recording a finalization event in the KEL allows verifiers to predict where aggregate evidence may be collected for easy review. Without it, a verifier must collect evidence of joint issuance signatures from disparate locations.</li>
-<li>rmgrp: a <a class="term-reference" href="#term:revocation-operator">revocation operator</a> that has parallel semantics to <code>mgrp</code>, but defines the threshold required to revoke the dossier.</li>
+<li><code>MGRP</code>: a <a class="term-reference" href="#term:threshold-operator">threshold operator</a> that takes an arity argument, <code>m</code>, which is expressed as an integer following the operator name: <code>MGRP:7</code> is an MGRP with <code>arity</code> = 7. The presence of this operator triggers a requirement that the set of corresponding potential signers (identified by AID) MUST enumerated in edges named <code>1</code>, <code>2</code>, and so forth. Thus, the <em>m</em> in an <em>m of n</em> approval pattern is given by <code>m</code>, and <code>n</code> equals the count of numbered edges.</li>
+<li><code>RMGRP</code>: a <a class="term-reference" href="#term:revocation-operator">revocation operator</a> that has parallel semantics to <code>MGRP</code>, but defines the threshold required to revoke the dossier. <code>RMGRP</code> takes an arity argument, <code>m</code>, which is expressed as an integer following the operator name: <code>RMGRP:3</code> is an RMGRP with <code>arity</code> = 3. The presence of this operator triggers a requirement that the set of corresponding potential signers (identified by AID) MUST enumerated in edges named <code>1</code>, <code>2</code>, and so forth. Thus, the <em>m</em> in an <em>m of n</em> revocation pattern is given by <code>m</code>, and <code>n</code> equals the count of numbered edges. This operator may appear on the same edge group as <code>MGRP</code>, in which case the parties that can cooperate to revoke are the same parties that can cooperate to issue, but it may have a different <code>arity</code> value. It may also appear on a different edge group entirely.</li>
+<li><code>QGRP</code>: A qualification operator that takes a <code>schema</code> aregument, which is expressed as a SAID following the operator name: <code>QGRP:&lt;X&gt;</code> is a QGRP with <code>schema</code> = X. The <code>schema</code> argument describes ACDC-based proof that must be presented by any qualified signer.</li>
+<li><code>FIN</code>: a <a class="term-reference" href="#term:finalization-operator">finalization operator</a> that signals whether a verifier should expect a finalization event in a KEL. Recording a finalization event in the KEL allows verifiers to predict where aggregate evidence may be collected for easy review. Without it, a verifier must collect evidence of joint issuance signatures from disparate locations.</li>
 </ul>
 <h3 id="finalization"><a class="toc-anchor d-print-none" href="#finalization">§</a> Finalization</h3>
 <p>A <a class="term-reference" href="#term:coordinator">coordinator</a> MAY choose to finalize a joint issuance to assist verifiers that do not perform recursive graph traversal.</p>
@@ -848,7 +849,7 @@ c. For standard dossiers with a single issuer, retrieve the issuer KEL and verif
 <ul>
 <li>goal: collect a threshold of endorsements from a distributed and potentially dynamic set of signers.</li>
 <li>key concept: asynchronous threshold satisfaction. Unlike a standard multisig group that requires tight coordination among a fixed set of peers, this pattern allows any aid that satisfies the criteria defined in the dossier schema to contribute an endorsement.</li>
-<li>mechanism: the <a class="term-reference" href="#term:coordinator">coordinator</a> initiates the dossier and distributes the candidate acdc. participants signify their agreement by anchoring a seal to the dossier said in their individual kels. the dossier uses the mgrp operator to define the conditions for validity, such as a specific count of unique endorsements.</li>
+<li>mechanism: the <a class="term-reference" href="#term:coordinator">coordinator</a> initiates the dossier and distributes the candidate acdc. participants signify their agreement by anchoring a seal to the dossier said in their individual kels. the dossier uses the MGRP operator to define the conditions for validity, such as a specific count of unique endorsements.</li>
 <li>verification: a verifier confirms the dossier is valid by observing that the required number of individual kels contain the necessary seals. the <a class="term-reference" href="#term:coordinator">coordinator</a> may choose to finalize the dossier once the target count is reached to simplify this check for third parties.</li>
 </ul>
 <h2 id="bibliography"><a class="toc-anchor d-print-none" href="#bibliography">§</a> Bibliography</h2>

@@ -155,11 +155,11 @@ The verification process for a dossier requires a citation and a referenceTime a
 
 2. Validate dossier integrity: calculate the SAID of the retrieved data and ensure it matches the expected SAID from the citation.
 
-3. Determine issuance model: inspect the edges block for the fin [[ref: operator]] or m-ary mgrp operator.
+3. Determine issuance model: inspect the edges block for the fin [[ref: operator]] or m-ary MGRP operator.
 
 4. Validate signatures and anchors:
    a. If the fin operator is present, locate the finalization event in the primary KEL. Verify that the event contains the required threshold-satisfying signatures or seals.
-   b. If the fin operator is absent but a mgrp operator is present, identify the member AIDs defined in the threshold group. Fetch the individual KEL for each member and verify that a valid seal to the dossier SAID exists in each KEL. Confirm that the total weight of verified members meets the threshold defined in the mgrp operator.
+   b. If the fin operator is absent but a MGRP operator is present, identify the member AIDs defined in the threshold group. Fetch the individual KEL for each member and verify that a valid seal to the dossier SAID exists in each KEL. Confirm that the total weight of verified members meets the threshold defined in the MGRP operator.
    c. For standard dossiers with a single issuer, retrieve the issuer KEL and verify the signature against the public keys authoritative at the referenceTime.
 
 5. Recursive graph traversal: for each named edge in the edges block, fetch the referenced artifact and perform this validation algorithm recursively.
@@ -195,9 +195,10 @@ A joint issuance must satisfy an m-ary threshold operator defined in the edge se
 ### New operators for joint issuance
 The following operators are defined to support the logic of joint issuance within the edges block:
 
-* mgrp: a [[ref: threshold operator]] that defines the count of signatures or seals required to satisfy the issuance. This is <var>m</var> in an *m of n* scheme. The value of the corresponding <var>n</var> MAY be given by counting enumerated, potential signers in the edge group to which this operator attaches [TODO]. Alternatively, potential signers may be *qualified* rather than enumerated, by referencing schema that must be satisfied by ACDC-based proof from the signer. The latter behavior allows approvals that model signatures on a petition, for example, where X number of signatures must be gathered from qualified endorsers.
-* fin: a [[ref: finalization operator]] that signals whether a verifier should expect a finalization event in a KEL. Recording a finalization event in the KEL allows verifiers to predict where aggregate evidence may be collected for easy review. Without it, a verifier must collect evidence of joint issuance signatures from disparate locations.
-* rmgrp: a [[ref: revocation operator]] that has parallel semantics to `mgrp`, but defines the threshold required to revoke the dossier.
+* `MGRP`: a [[ref: threshold operator]] that takes an arity argument, `m`, which is expressed as an integer following the operator name: `MGRP:7` is an MGRP with `arity` = 7. The presence of this operator triggers a requirement that the set of corresponding potential signers (identified by AID) MUST enumerated in edges named `1`, `2`, and so forth. Thus, the *m* in an *m of n* approval pattern is given by `m`, and `n` equals the count of numbered edges.
+* `RMGRP`: a [[ref: revocation operator]] that has parallel semantics to `MGRP`, but defines the threshold required to revoke the dossier. `RMGRP` takes an arity argument, `m`, which is expressed as an integer following the operator name: `RMGRP:3` is an RMGRP with `arity` = 3. The presence of this operator triggers a requirement that the set of corresponding potential signers (identified by AID) MUST enumerated in edges named `1`, `2`, and so forth. Thus, the *m* in an *m of n* revocation pattern is given by `m`, and `n` equals the count of numbered edges. This operator may appear on the same edge group as `MGRP`, in which case the parties that can cooperate to revoke are the same parties that can cooperate to issue, but it may have a different `arity` value. It may also appear on a different edge group entirely.
+* `QGRP`: A qualification operator that takes a `schema` aregument, which is expressed as a SAID following the operator name: `QGRP:<X>` is a QGRP with `schema` = X. The `schema` argument describes ACDC-based proof that must be presented by any qualified signer.
+* `FIN`: a [[ref: finalization operator]] that signals whether a verifier should expect a finalization event in a KEL. Recording a finalization event in the KEL allows verifiers to predict where aggregate evidence may be collected for easy review. Without it, a verifier must collect evidence of joint issuance signatures from disparate locations.
 
 ### Finalization
 A [[ref: coordinator]] MAY choose to finalize a joint issuance to assist verifiers that do not perform recursive graph traversal.
@@ -329,7 +330,7 @@ This profile demonstrates the open-endorsement dossier pattern, designed for cas
 
 * goal: collect a threshold of endorsements from a distributed and potentially dynamic set of signers.
 * key concept: asynchronous threshold satisfaction. Unlike a standard multisig group that requires tight coordination among a fixed set of peers, this pattern allows any aid that satisfies the criteria defined in the dossier schema to contribute an endorsement.
-* mechanism: the [[ref: coordinator]] initiates the dossier and distributes the candidate acdc. participants signify their agreement by anchoring a seal to the dossier said in their individual kels. the dossier uses the mgrp operator to define the conditions for validity, such as a specific count of unique endorsements.
+* mechanism: the [[ref: coordinator]] initiates the dossier and distributes the candidate acdc. participants signify their agreement by anchoring a seal to the dossier said in their individual kels. the dossier uses the MGRP operator to define the conditions for validity, such as a specific count of unique endorsements.
 * verification: a verifier confirms the dossier is valid by observing that the required number of individual kels contain the necessary seals. the [[ref: coordinator]] may choose to finalize the dossier once the target count is reached to simplify this check for third parties.
 
 [//]: # (\newpage)
