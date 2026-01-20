@@ -114,15 +114,15 @@ The normative steps for dossier curation are as follows:
 
 1. Evidence acquisition: The entity intending to issue the dossier first acquires the necessary evidence from their respective authoritative sources. For example, a business might obtain a legal entity vetting credential from a qualified issuer, a telephone number allocation credential from its carrier, and a brand credential from a brand vetter.1
 
-2. Assembly: The issuer or [[ref: curator]] constructs the dossier ACDC data structure. This involves creating an edges block and populating it with named links that point to each acquired evidence artifact, as described in Section 3.
+2. Assembly: The issuer or [[ref: collector]] constructs the dossier ACDC data structure. This involves creating an edges block and populating it with named links that point to each acquired evidence artifact, as described in Section 3.
 
-3. Iterative assembly and versioning: Some dossiers are static, but with others, as new evidence is collected or the status of investigation changes, the dossier evolves. To support this, [[ref: curator]]s MAY issue new versions of a dossier. A new version MUST be a valid ACDC that links to the previous version via a prev [[ref: edge]] or a schema-specific equivalent. This creates a verifiable chain of the dossier's history, allowing verifiers to traverse back through the lineage of the evidence collection.
+3. Iterative assembly and versioning: Some dossiers are static, but with others, as new evidence is collected or the status of investigation changes, the dossier evolves. To support this, [[ref: collector]]s MAY issue new versions of a dossier. A new version MUST be a valid ACDC that links to the previous version via a prev [[ref: edge]] or a schema-specific equivalent. This creates a verifiable chain of the dossier's history, allowing verifiers to traverse back through the lineage of the evidence collection.
 
-4. Issuance initiation: For single-issuer dossiers, the [[ref: curator]] signs the fully assembled dossier ACDC. For joint issuance, the [[ref: curator]] provides the drafted ACDC to a [[ref: proposer]]. The [[ref: proposer]] then coordinates the signing or anchoring process among the designated members.
+4. Issuance initiation: For single-issuer dossiers, the [[ref: collector]] signs the fully assembled dossier ACDC. For joint issuance, the [[ref: collector]] provides the drafted ACDC to a [[ref: coordinator]]. The [[ref: coordinator]] then coordinates the signing or anchoring process among the designated members.
 
-5. Signing and anchoring: The [[ref: curator]] or [[ref: finalizer]] uses the private keys associated with a KERI AID to sign the dossier. This act creates a non-repudiable attestation to the dossier's content. The issuance event is then anchored in a key event log (KEL), providing a permanent record. In joint issuance, this anchor may be distributed across several KELs or consolidated in a finalization event.
+5. Signing and anchoring: The [[ref: collector]] or [[ref: finalizer]] uses the private keys associated with a KERI AID to sign the dossier. This act creates a non-repudiable attestation to the dossier's content. The issuance event is then anchored in a key event log (KEL), providing a permanent record. In joint issuance, this anchor may be distributed across several KELs or consolidated in a finalization event.
 
-6. Publication: The issuer or [[ref: proposer]] publishes the signed dossier ACDC at a stable, publicly resolvable location, typically one or more HTTP URLs. This allows authorized verifiers to fetch the dossier when it is cited.
+6. Publication: The issuer or [[ref: coordinator]] publishes the signed dossier ACDC at a stable, publicly resolvable location, typically one or more HTTP URLs. This allows authorized verifiers to fetch the dossier when it is cited.
 
 ### State Management and Metadata Overlays
 
@@ -169,17 +169,18 @@ The verification process for a dossier requires a citation and a referenceTime a
 7. Apply semantic rules: apply application-specific policy rules once cryptographic validation is complete.
 
 ## Joint issuance
+It's entirely possible for a dossier to be assembled and signed by a single party. For example, an artist that wishes to collect cryptopgraphic evidence of their creations may do so without relying on any external party. However, many dossiers will combine asynchronous contributions from multiple parties. In such cases, signing the ACDC that references all the individual pieces of evidence is best managed with joint issuance. 
 
-### Joint issuance logic
-Joint issuance is a model for authorizing a dossier through asynchronous coordination. Unlike group multisig, which requires synchronous agreement on key event log (KEL) sequence numbers, joint issuance relies on logic within the ACDC layer. This allows members to contribute signatures or seals to a dossier at different times and via different channels without immediate impact on a shared KEL.
+### Logic
+Joint issuance is a model for approving a dossier through asynchronous coordination, possibly with significant elapsed time. Unlike group multisig, which requires synchronous agreement on key event log (KEL) sequence numbers, joint issuance relies on logic within the ACDC layer. This allows members to contribute signatures or seals to a dossier at different times and via different channels without immediate impact on a shared KEL.
 
 The validity of a jointly issued dossier is determined by the satisfaction of a [[ref: threshold-operator, threshold operator]] within its [[ref: edge]] graph. The logic is decoupled from key management. This permits higher flexibility in how issuance is achieved and verified.
 
 ### Roles
 Joint issuance involves specific roles that may be performed by the same or different entities:
 
-* Curator: the entity that assembles the evidence artifacts and defines the initial dossier structure.
-* Proposer: the entity that initiates the issuance action and distributes the candidate dossier for endorsement.
+* Collector: the entity that assembles the evidence artifacts and defines the initial dossier structure.
+* Coordinator: the entity that, once collection is finished, initiates the issuance action and distributes the candidate dossier for endorsement.
 * Finalizer: any entity that, upon observing that an issuance threshold is met, submits a finalization event to a KEL.
 
 ### Threshold mechanics
@@ -193,7 +194,7 @@ The following operators are defined to support the logic of joint issuance withi
 * rev: a [[ref: revocation operator]] that defines the threshold required to revoke the dossier, which may differ from the issuance threshold.
 
 ### Finalization
-A [[ref: proposer]] MAY choose to finalize a joint issuance to assist verifiers that do not perform recursive graph traversal.
+A [[ref: coordinator]] MAY choose to finalize a joint issuance to assist verifiers that do not perform recursive graph traversal.
 
 1. Satisfaction: a [[ref: finalizer]] observes that a sufficient number of signatures or seals have been gathered to meet the threshold.
 2. Allocation: the [[ref: finalizer]] allocates the next sequence number in the relevant KEL, which is typically a group AID.
@@ -272,7 +273,7 @@ The following use cases illustrate distinct architectural patterns for deploying
 The Verifiable Voice Protocol (VVP) represents the **Compositional Dossier** pattern. Here, the primary goal is not to tell a story or trace a history, but to assemble a valid "permission slip" from independent authorities.
 
 * **Goal:** Prove the right to engage in a high-trust activity (making a call).
-* **Key Concept: Distributed Root of Trust.** In this pattern, the dossier assembler (the Accountable Party) does not generate the evidence. Instead, they act as a [[ref: curator]], bundling credentials issued by distinct, domain-specific roots of trust:
+* **Key Concept: Distributed Root of Trust.** In this pattern, the dossier assembler (the Accountable Party) does not generate the evidence. Instead, they act as a [[ref: collector]], bundling credentials issued by distinct, domain-specific roots of trust:
     * **Legal Identity:** Vetted by a Legal Entity Identifier (LEI) issuer.
     * **Resource Authority:** Telephone number usage vetted by a telecom carrier or regulator.
     * **Brand Rights:** Vetted by a trademark steward.
@@ -322,8 +323,8 @@ This profile demonstrates the open-endorsement dossier pattern, designed for cas
 
 * goal: collect a threshold of endorsements from a distributed and potentially dynamic set of signers.
 * key concept: asynchronous threshold satisfaction. Unlike a standard multisig group that requires tight coordination among a fixed set of peers, this pattern allows any aid that satisfies the criteria defined in the dossier schema to contribute an endorsement.
-* mechanism: the [[ref: proposer]] initiates the dossier and distributes the candidate acdc. participants signify their agreement by anchoring a seal to the dossier said in their individual kels. the dossier uses the thr operator to define the conditions for validity, such as a specific count of unique endorsements.
-* verification: a verifier confirms the dossier is valid by observing that the required number of individual kels contain the necessary seals. the [[ref: proposer]] may choose to finalize the dossier once the target count is reached to simplify this check for third parties.
+* mechanism: the [[ref: coordinator]] initiates the dossier and distributes the candidate acdc. participants signify their agreement by anchoring a seal to the dossier said in their individual kels. the dossier uses the thr operator to define the conditions for validity, such as a specific count of unique endorsements.
+* verification: a verifier confirms the dossier is valid by observing that the required number of individual kels contain the necessary seals. the [[ref: coordinator]] may choose to finalize the dossier once the target count is reached to simplify this check for third parties.
 
 [//]: # (\newpage)
 
