@@ -96,8 +96,11 @@ IN NO EVENT WILL ANY ToIP PARTY BE LIABLE TO ANY OTHER PARTY FOR LOST PROFITS OR
 
 ## Scope
 
-Creation of a flexible collection of robustly linked, formally verifiable evidence.
+This specification defines the data model, lifecycle, and verification semantics for verifiable dossiers — cryptographically attested collections of evidence structured as Authentic Chained Data Containers (ACDCs). It is intended for software developers building on the KERI/ACDC ecosystem, standards authors defining protocols that cite or depend on dossiers, enterprise architects designing evidence workflows, and legal or regulatory professionals evaluating the trust guarantees of dossier-based systems.
 
+The following are in scope: normative requirements for dossier structure and schema; joint issuance, operator semantics, and revocation; privacy-preserving and graduated disclosure; and non-normative implementation guidance through use case profiles.
+
+The following are explicitly out of scope: transport or citation protocols for presenting dossiers at transaction time; storage and hosting requirements for dossier artifacts; the internal data formats of evidence items referenced by a dossier; and the KERI, ACDC, and CESR specifications on which this document depends.
 
 ## Normative references
 
