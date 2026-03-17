@@ -88,7 +88,7 @@ customElements.define("slide-panels",class extends HTMLElement{static get observ
       ],
       "source": "xref",
       "termId": "term:edge",
-      "lastUpdated": "2026-03-17T12:58:41.848Z"
+      "lastUpdated": "2026-03-17T13:22:44.078Z"
     },
     {
       "externalSpec": "KERISuite",
@@ -122,7 +122,7 @@ customElements.define("slide-panels",class extends HTMLElement{static get observ
       ],
       "source": "xref",
       "termId": "term:operator",
-      "lastUpdated": "2026-03-17T12:58:41.848Z",
+      "lastUpdated": "2026-03-17T13:22:44.079Z",
       "firstTrefAlias": "operator"
     }
   ]
@@ -378,6 +378,11 @@ customElements.define("slide-panels",class extends HTMLElement{static get observ
 <li><a href="#temporal-pinning">Temporal Pinning</a></li>
 <li><a href="#citation-referencing-the-dossier-in-protocols">Citation: Referencing the Dossier in Protocols</a></li>
 <li><a href="#verification-algorithm-for-validation">Verification: Algorithm for Validation</a></li>
+<li><a href="#the-attributes-section-proximate-metadata">The Attributes Section: Proximate Metadata</a>
+<ul>
+<li><a href="#standard-proximate-metadata-fields">Standard Proximate Metadata Fields</a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li><a href="#joint-issuance">Joint issuance</a>
@@ -413,7 +418,7 @@ customElements.define("slide-panels",class extends HTMLElement{static get observ
 <li><a href="#investigative-journalism-the-redacted-dossier">Investigative Journalism: The Redacted Dossier</a></li>
 <li><a href="#mortgage-qualification-the-snapshot-dossier">Mortgage Qualification: The Snapshot Dossier</a></li>
 <li><a href="#clinical-trials-the-predicate-dossier">Clinical Trials: The Predicate Dossier</a></li>
-<li><a href="#the-petition-the-open-endorsement-dossier">The petition: the open-endorsement dossier</a></li>
+<li><a href="#the-petition-the-open-endorsement-dossier">The Petition: The Open-Endorsement Dossier</a></li>
 </ul>
 </li>
 <li><a href="#bibliography">Bibliography</a></li>
@@ -457,7 +462,8 @@ customElements.define("slide-panels",class extends HTMLElement{static get observ
 <p>The primary purpose of a dossier is to empower decisions that are likely to be made based on the attested collection of evidence it includes. This contrasts with systems that generate proofs just-in-time in response to a specific verifier query. By pre-assembling evidence into a stable, long-lived, and verifiable container, the dossier enables efficient and scalable proof presentation in a wide variety of contexts.</p>
 <h3 id="relationship-to-keri-acdc-and-verifiable-credentials"><a class="toc-anchor d-print-none" href="#relationship-to-keri-acdc-and-verifiable-credentials">§</a> Relationship to KERI, ACDC, and Verifiable Credentials</h3>
 <p>The dossier is not a standalone concept; it is deeply rooted in a stack of emerging open standards for decentralized identity. Its technical foundation is the Authentic Chained Data Containers (ACDC) specification, which defines a format for verifiable, chainable data structures.2 ACDCs, in turn, are secured by the Key Event Receipt Infrastructure (KERI), a protocol for decentralized key management that provides secure, rotatable, and auditable Autonomic Identifiers (AIDs).4 The canonical data representation is provided by the Composable Event Streaming Representation (CESR), an encoding format that ensures deterministic serialization for cryptographic operations.[[6]]</p>
-<p>Within this ecosystem, it is important to distinguish the dossier from related concepts, including a conventional ACDC credential or a “bespoke ACDC”. A bespoke ACDC may also contain custom links to evidence, but it is typically generated just-in-time to answer a specific verifier’s query. A dossier, conversely, is a pre-curated collection intended for broader, repeated use. The emergence of the dossier signifies a maturation in the field of decentralized identity. The ecosystem is moving beyond simple, atomic claims about a subject (the purpose of a traditional credential) to support the creation of complex, curated narratives backed by a body of evidence. This reflects a more nuanced understanding of trust, recognizing that in the real world, assurance is often derived from a holistic evaluation of multiple, interrelated facts. This paradigm shift establishes a new and vital role within digital ecosystems: the “Evidence Curator.” This role—which could be filled by an individual managing their own data, a lawyer building a case, a journalist protecting sources, or an automated service—is responsible for the assembly and attestation of evidence collections, and the dossier provides the formal data structure to support this function.</p>
+<p>Within this ecosystem, it is important to distinguish the dossier from related concepts, including a conventional ACDC credential or a “bespoke ACDC”. A bespoke ACDC may also contain custom links to evidence, but it is a direct response to a specific verifier’s query. A dossier, by contrast, is a pre-curated collection assembled in anticipation of presenting to arbitrary parties at arbitrary points in time. Timing is a consequence of this difference, not the cause of it: a dossier is created in advance because it must be, given that its intended audience is unknown.</p>
+<p>The emergence of the dossier signifies a maturation in the field of decentralized identity. The ecosystem is moving beyond simple, atomic claims about a subject (the purpose of a traditional credential) to support the creation of complex, curated narratives backed by a body of evidence. This reflects a more nuanced understanding of trust, recognizing that in the real world, assurance is often derived from a holistic evaluation of multiple, interrelated facts. This paradigm shift establishes a new and vital role within digital ecosystems: the “Evidence Curator.” This role—which could be filled by an individual managing their own data, a lawyer building a case, a journalist protecting sources, or an automated service—is responsible for the assembly and attestation of evidence collections, and the dossier provides the formal data structure to support this function.</p>
 <p>The following table clarifies these distinctions.</p>
 <div class="table-responsive-md"><table class="table table-striped table-bordered table-hover">
 <thead>
@@ -715,6 +721,57 @@ c. For standard dossiers with a single issuer, retrieve the issuer KEL and verif
 <p>Apply semantic rules: apply application-specific policy rules once cryptographic validation is complete.</p>
 </li>
 </ol>
+<h3 id="the-attributes-section-proximate-metadata"><a class="toc-anchor d-print-none" href="#the-attributes-section-proximate-metadata">§</a> The Attributes Section: Proximate Metadata</h3>
+<p>A dossier differs from an ordinary ACDC credential in how it uses the attributes
+(<code>a</code>) section. In a conventional credential, the <code>a</code> section carries the issuer’s
+claims about a subject — the substance of what is being asserted. In a dossier,
+the substance of the assertion is the evidence graph, which enters the dossier
+exclusively through edges. The <code>a</code> section MUST NOT be used to carry primary
+evidence. Instead, it is reserved for proximate metadata: facts about the dossier
+itself that the issuer wishes to attest directly as part of the act of issuance.</p>
+<p>The distinction can be illustrated concretely. An insurance adjustor assembling a
+dossier about a car crash would include photographs of the vehicles, a diagram of
+the intersection, and witness statements as edges — these are the evidence. The
+adjustor’s name, the case number, the date the dossier was assembled, and the
+governance framework under which it was produced are metadata about the dossier,
+and belong in the <code>a</code> section.</p>
+<p>This separation preserves the architectural integrity of the dossier model: edges
+are the mechanism for cryptographically linking to external, independently verifiable
+artifacts, while the <code>a</code> section provides the context and provenance that frames
+the evidence collection as a whole.</p>
+<h4 id="standard-proximate-metadata-fields"><a class="toc-anchor d-print-none" href="#standard-proximate-metadata-fields">§</a> Standard Proximate Metadata Fields</h4>
+<p>The following fields are defined for use in the <code>a</code> section of a dossier. All are
+optional unless a governing schema requires otherwise. Implementers MAY define
+additional fields appropriate to their domain.</p>
+<ul>
+<li>
+<p><strong><code>assembled</code></strong>: An ISO 8601 timestamp recording when the dossier was assembled.
+This is distinct from the issuance date recorded in the ACDC envelope, which may
+differ if the dossier was finalized and signed at a later time.</p>
+</li>
+<li>
+<p><strong><code>assembler</code></strong>: The AID or human-readable name of the entity that curated the
+evidence collection. This field is most useful when the assembler differs from
+the issuer — for example, when a staff member compiles the evidence and a senior
+officer issues the dossier.</p>
+</li>
+<li>
+<p><strong><code>purpose</code></strong>: A brief, human-readable statement of why the dossier was assembled
+and what decisions it is intended to support. Example: <code>"Document evidence of loss for claim #A-2047 per policy terms."</code> This field is not intended to be
+machine-interpreted; it serves as a plain-language summary for human reviewers.</p>
+</li>
+<li>
+<p><strong><code>ref</code></strong>: An external reference identifier, such as a case number, docket number,
+or transaction ID, that links the dossier to a record in an external system. This
+field is intentionally untyped; its meaning is determined by the governance context.</p>
+</li>
+<li>
+<p><strong><code>governance</code></strong>: A SAID or URI referencing the governance framework, policy
+document, or rulebook under which the dossier was assembled. This allows verifiers
+to evaluate not just the cryptographic integrity of the dossier but the procedural
+legitimacy of its curation.</p>
+</li>
+</ul>
 <h2 id="joint-issuance"><a class="toc-anchor d-print-none" href="#joint-issuance">§</a> Joint issuance</h2>
 <p>It’s possible for a dossier to be assembled and signed by a single party. For example, an artist that wishes to collect cryptopgraphic evidence of their creations may do so as a solo activity. However, many dossiers will snapshot evidence contributions from multiple parties, and will thus represent a group work product with some kind of aggregate approval mechanism. In such cases, signing the ACDC that references all the individual pieces of evidence is managed with joint issuance.</p>
 <h3 id="logic"><a class="toc-anchor d-print-none" href="#logic">§</a> Logic</h3>
@@ -846,13 +903,13 @@ c. For standard dossiers with a single issuer, retrieve the issuer KEL and verif
 </li>
 <li><strong>Verification:</strong> The verifier validates the cryptographic proof rather than parsing the document, enabling high-assurance compliance without data leakage.</li>
 </ul>
-<h3 id="the-petition-the-open-endorsement-dossier"><a class="toc-anchor d-print-none" href="#the-petition-the-open-endorsement-dossier">§</a> The petition: the open-endorsement dossier</h3>
-<p>This profile demonstrates the open-endorsement dossier pattern, designed for cases where the set of participants is large or cannot be fully enumerated at the start of the curation process.</p>
+<h3 id="the-petition-the-open-endorsement-dossier"><a class="toc-anchor d-print-none" href="#the-petition-the-open-endorsement-dossier">§</a> The Petition: The Open-Endorsement Dossier</h3>
+<p>This profile demonstrates the <strong>Open-Endorsement Dossier</strong> pattern, designed for cases where the set of participants is large or cannot be fully enumerated at the start of the curation process.</p>
 <ul>
-<li>goal: collect a threshold of endorsements from a distributed and potentially dynamic set of signers.</li>
-<li>key concept: asynchronous threshold satisfaction. Unlike a standard multisig group that requires tight coordination among a fixed set of peers, this pattern allows any aid that satisfies the criteria defined in the dossier schema to contribute an endorsement.</li>
-<li>mechanism: the <a class="term-reference" href="#term:coordinator">coordinator</a> initiates the dossier and distributes the candidate acdc. participants signify their agreement by anchoring a seal to the dossier said in their individual kels. the dossier uses the MGRP operator to define the conditions for validity, such as a specific count of unique endorsements.</li>
-<li>verification: a verifier confirms the dossier is valid by observing that the required number of individual kels contain the necessary seals. the <a class="term-reference" href="#term:coordinator">coordinator</a> may choose to finalize the dossier once the target count is reached to simplify this check for third parties.</li>
+<li><strong>Goal:</strong> Collect a threshold of endorsements from a distributed and potentially dynamic set of signers.</li>
+<li><strong>Key Concept: Asynchronous Threshold Satisfaction.</strong> Unlike a standard multisig group that requires tight coordination among a fixed set of peers, this pattern allows any AID that satisfies the criteria defined in the dossier schema to contribute an endorsement.</li>
+<li><strong>Mechanism:</strong> The coordinator initiates the dossier and distributes the candidate ACDC. Participants signify their agreement by anchoring a seal to the dossier SAID in their individual KELs. The dossier uses the <code>M</code> operator (optionally combined with <code>Q</code>) to define the conditions for validity, such as a specific count of qualified, unique endorsements.</li>
+<li><strong>Verification:</strong> A verifier confirms the dossier is valid by observing that the required number of individual KELs contain the necessary seals. The coordinator may choose to finalize the dossier once the target count is reached, simplifying this check for third parties.</li>
 </ul>
 <h2 id="bibliography"><a class="toc-anchor d-print-none" href="#bibliography">§</a> Bibliography</h2>
 <p>[[spec]]</p>

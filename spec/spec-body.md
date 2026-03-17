@@ -168,6 +168,57 @@ The verification process for a dossier requires a citation and a referenceTime a
 
 7. Apply semantic rules: apply application-specific policy rules once cryptographic validation is complete.
 
+### The Attributes Section: Proximate Metadata
+
+A dossier differs from an ordinary ACDC credential in how it uses the attributes
+(`a`) section. In a conventional credential, the `a` section carries the issuer's
+claims about a subject — the substance of what is being asserted. In a dossier,
+the substance of the assertion is the evidence graph, which enters the dossier
+exclusively through edges. The `a` section MUST NOT be used to carry primary
+evidence. Instead, it is reserved for proximate metadata: facts about the dossier
+itself that the issuer wishes to attest directly as part of the act of issuance.
+
+The distinction can be illustrated concretely. An insurance adjustor assembling a
+dossier about a car crash would include photographs of the vehicles, a diagram of
+the intersection, and witness statements as edges — these are the evidence. The
+adjustor's name, the case number, the date the dossier was assembled, and the
+governance framework under which it was produced are metadata about the dossier,
+and belong in the `a` section.
+
+This separation preserves the architectural integrity of the dossier model: edges
+are the mechanism for cryptographically linking to external, independently verifiable
+artifacts, while the `a` section provides the context and provenance that frames
+the evidence collection as a whole.
+
+#### Standard Proximate Metadata Fields
+
+The following fields are defined for use in the `a` section of a dossier. All are
+optional unless a governing schema requires otherwise. Implementers MAY define
+additional fields appropriate to their domain.
+
+- **`assembled`**: An ISO 8601 timestamp recording when the dossier was assembled.
+  This is distinct from the issuance date recorded in the ACDC envelope, which may
+  differ if the dossier was finalized and signed at a later time.
+
+- **`assembler`**: The AID or human-readable name of the entity that curated the
+  evidence collection. This field is most useful when the assembler differs from
+  the issuer — for example, when a staff member compiles the evidence and a senior
+  officer issues the dossier.
+
+- **`purpose`**: A brief, human-readable statement of why the dossier was assembled
+  and what decisions it is intended to support. Example: `"Document evidence of
+  loss for claim #A-2047 per policy terms."` This field is not intended to be
+  machine-interpreted; it serves as a plain-language summary for human reviewers.
+
+- **`ref`**: An external reference identifier, such as a case number, docket number,
+  or transaction ID, that links the dossier to a record in an external system. This
+  field is intentionally untyped; its meaning is determined by the governance context.
+
+- **`governance`**: A SAID or URI referencing the governance framework, policy
+  document, or rulebook under which the dossier was assembled. This allows verifiers
+  to evaluate not just the cryptographic integrity of the dossier but the procedural
+  legitimacy of its curation.
+  
 ## Joint issuance
 It's possible for a dossier to be assembled and signed by a single party. For example, an artist that wishes to collect cryptopgraphic evidence of their creations may do so as a solo activity. However, many dossiers will snapshot evidence contributions from multiple parties, and will thus represent a group work product with some kind of aggregate approval mechanism. In such cases, signing the ACDC that references all the individual pieces of evidence is managed with joint issuance. 
 
@@ -324,14 +375,14 @@ This profile introduces the **Predicate Dossier** pattern, essential for environ
     * *Example:* The dossier asserts `inclusion_criteria_met: true`. The evidence is a ZKP proving that "Subject Age > 18 AND HIV_Status == Positive" without revealing the subject's birthdate or specific medical markers.
 * **Verification:** The verifier validates the cryptographic proof rather than parsing the document, enabling high-assurance compliance without data leakage.
 
-### The petition: the open-endorsement dossier
+### The Petition: The Open-Endorsement Dossier
 
-This profile demonstrates the open-endorsement dossier pattern, designed for cases where the set of participants is large or cannot be fully enumerated at the start of the curation process.
+This profile demonstrates the **Open-Endorsement Dossier** pattern, designed for cases where the set of participants is large or cannot be fully enumerated at the start of the curation process.
 
-* goal: collect a threshold of endorsements from a distributed and potentially dynamic set of signers.
-* key concept: asynchronous threshold satisfaction. Unlike a standard multisig group that requires tight coordination among a fixed set of peers, this pattern allows any aid that satisfies the criteria defined in the dossier schema to contribute an endorsement.
-* mechanism: the [[ref: coordinator]] initiates the dossier and distributes the candidate acdc. participants signify their agreement by anchoring a seal to the dossier said in their individual kels. the dossier uses the MGRP operator to define the conditions for validity, such as a specific count of unique endorsements.
-* verification: a verifier confirms the dossier is valid by observing that the required number of individual kels contain the necessary seals. the [[ref: coordinator]] may choose to finalize the dossier once the target count is reached to simplify this check for third parties.
+- **Goal:** Collect a threshold of endorsements from a distributed and potentially dynamic set of signers.
+- **Key Concept: Asynchronous Threshold Satisfaction.** Unlike a standard multisig group that requires tight coordination among a fixed set of peers, this pattern allows any AID that satisfies the criteria defined in the dossier schema to contribute an endorsement.
+- **Mechanism:** The coordinator initiates the dossier and distributes the candidate ACDC. Participants signify their agreement by anchoring a seal to the dossier SAID in their individual KELs. The dossier uses the `M` operator (optionally combined with `Q`) to define the conditions for validity, such as a specific count of qualified, unique endorsements.
+- **Verification:** A verifier confirms the dossier is valid by observing that the required number of individual KELs contain the necessary seals. The coordinator may choose to finalize the dossier once the target count is reached, simplifying this check for third parties.
 
 [//]: # (\newpage)
 
