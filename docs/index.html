@@ -88,7 +88,7 @@ customElements.define("slide-panels",class extends HTMLElement{static get observ
       ],
       "source": "xref",
       "termId": "term:edge",
-      "lastUpdated": "2026-03-17T13:22:44.078Z"
+      "lastUpdated": "2026-03-17T14:10:02.314Z"
     },
     {
       "externalSpec": "KERISuite",
@@ -122,7 +122,7 @@ customElements.define("slide-panels",class extends HTMLElement{static get observ
       ],
       "source": "xref",
       "termId": "term:operator",
-      "lastUpdated": "2026-03-17T13:22:44.079Z",
+      "lastUpdated": "2026-03-17T14:10:02.315Z",
       "firstTrefAlias": "operator"
     }
   ]
@@ -364,9 +364,8 @@ customElements.define("slide-panels",class extends HTMLElement{static get observ
 <li><a href="#referencing-acdc-native-evidence">Referencing ACDC-Native Evidence</a></li>
 <li><a href="#referencing-non-acdc-evidence">Referencing Non-ACDC Evidence</a>
 <ul>
-<li><a href="#direct-reference-by-signature-discouraged">Direct Reference by Signature (Discouraged)</a></li>
-<li><a href="#the-acdc-wrapper-pattern-recommended">The ACDC Wrapper Pattern (Recommended)</a></li>
-<li><a href="#normative-schema-for-a-generic-evidence-wrapper">Normative Schema for a Generic Evidence Wrapper</a></li>
+<li><a href="#foreign-artifact-wrappers">Foreign Artifact Wrappers</a></li>
+<li><a href="#bridging-from-foreign-credential-ecosystems">Bridging from Foreign Credential Ecosystems</a></li>
 </ul>
 </li>
 </ul>
@@ -621,38 +620,103 @@ IN NO EVENT WILL ANY ToIP PARTY BE LIABLE TO ANY OTHER PARTY FOR LOST PROFITS OR
 </ul>
 <p>This mandated flexibility has a direct consequence for implementers of verifier systems. A generic dossier verifier can be built to perform universal cryptographic validation—confirming signatures, SAIDs, and KEL consistency—for any dossier conforming to the base schema. However, such a generic verifier cannot be expected to understand the full semantics of every possible dossier. For instance, it can verify that an edge labeled “lunarPropertyDeed” is cryptographically linked, but it cannot know what that means or how to process it. Therefore, verification must be understood as a layered process. The first layer, cryptographic validation, is universal and defined by this specification. The second layer, semantic validation (e.g., “Does this dossier contain a valid TNAlloc credential for the phone number in question?”), is necessarily application-specific and requires context-dependent business logic. This separation allows the dossier format to be a universal building block for evidence aggregation across countless current and future use cases.</p>
 <h2 id="incorporating-evidence"><a class="toc-anchor d-print-none" href="#incorporating-evidence">§</a> Incorporating Evidence</h2>
-<p>A dossier’s primary function is to serve as a container for references to external evidence. This section defines the normative methods for incorporating both ACDC-native and non-ACDC evidence formats.</p>
+<p>A dossier’s primary function is to serve as a container for references to
+external evidence. This section defines the normative methods for incorporating
+both ACDC-native and non-ACDC evidence formats.</p>
 <h3 id="referencing-acdc-native-evidence"><a class="toc-anchor d-print-none" href="#referencing-acdc-native-evidence">§</a> Referencing ACDC-Native Evidence</h3>
-<p>When a piece of evidence being included in a dossier is itself a valid ACDC (for example, a vettingCredential or a TNAlloc credential as defined in VVP), the corresponding <a class="term-reference" href="#term:edge">edge</a> in the dossier’s edges block MUST reference that evidence by its SAID and the SAID of its schema.</p>
-<p>The value of the edge MUST be a JSON object containing at least the following two keys:</p>
+<p>When a piece of evidence being included in a dossier is itself a valid ACDC
+(for example, a vettingCredential or a TNAlloc credential as defined in VVP),
+the corresponding edge in the dossier’s edges block MUST reference that evidence
+by its SAID and the SAID of its schema.</p>
+<p>The value of the edge MUST be a JSON object containing at least the following
+two keys:</p>
 <ul>
-<li><code>n</code>: The SAID of the referenced ACDC. This provides a direct, tamper-evident link to the evidence artifact.</li>
-<li><code>s</code>: The SAID of the schema to which the referenced ACDC conforms. This allows a verifier to correctly parse and interpret the evidence.</li>
+<li><code>n</code>: The SAID of the referenced ACDC. This provides a direct, tamper-evident
+link to the evidence artifact.</li>
+<li><code>s</code>: The SAID of the schema to which the referenced ACDC conforms. This allows
+a verifier to correctly parse and interpret the evidence.</li>
 </ul>
 <p>This pattern is exemplified by the sample dossier in the VVP specification.</p>
 <h3 id="referencing-non-acdc-evidence"><a class="toc-anchor d-print-none" href="#referencing-non-acdc-evidence">§</a> Referencing Non-ACDC Evidence</h3>
-<p>To foster broad interoperability, this specification provides mechanisms for incorporating evidence from other verifiable data ecosystems, such as W3C Verifiable Credentials or ISO mDLs.</p>
-<h4 id="direct-reference-by-signature-discouraged"><a class="toc-anchor d-print-none" href="#direct-reference-by-signature-discouraged">§</a> Direct Reference by Signature (Discouraged)</h4>
-<p>A dossier MAY include an <a class="term-reference" href="#term:edge">edge</a> that references non-ACDC material directly by its digital signature, without declaring a schema for the content. However, this method is NOT RECOMMENDED.</p>
-<p>The rationale for this recommendation is that direct reference places a significant and often untenable burden on the verifier. The verifier must possess the logic to parse and validate the foreign data format, understand its unique lifecycle, and locate its specific revocation mechanism, if one even exists. Such foreign evidence often has “unpredictable lifespans and undefined schemas,” making robust, automated verification difficult and brittle.1</p>
-<h4 id="the-acdc-wrapper-pattern-recommended"><a class="toc-anchor d-print-none" href="#the-acdc-wrapper-pattern-recommended">§</a> The ACDC Wrapper Pattern (Recommended)</h4>
-<p>The normatively RECOMMENDED pattern for including non-ACDC evidence is the “ACDC Wrapper,” also referred to as bridging. This pattern externalizes the complexity of handling foreign evidence formats into a dedicated, verifiable attestation.</p>
-<p>The process is as follows:</p>
-<ol>
-<li>A designated entity, hereafter the “bridging party,” obtains the non-ACDC evidence.</li>
-<li>The bridging party verifies the foreign evidence according to its native rules and policies (e.g., validating the signature and semantics of a W3C Verifiable Credential).</li>
-<li>The bridging party then issues a new, standard ACDC—the wrapper—that makes a specific, verifiable assertion, such as: “I, the bridging party, successfully verified the attached foreign evidence on date X according to policy Y”.1</li>
-<li>This newly created wrapper ACDC is then linked into the dossier using the standard mechanism for ACDC-native evidence described in Section 3.1.</li>
-</ol>
-<p>This pattern transforms the problem of verifying a foreign format into the problem of trusting the attestation of the bridging party. While this introduces a new trust consideration, it standardizes the verification process for the dossier’s consumer, who now only needs to validate a standard ACDC and assess the reputation of the bridging party. This “trust translation” is a powerful interoperability tool, but it requires careful consideration by verifiers. The verifier’s trust in the wrapped evidence is now contingent on the reputation, security practices, and verification policies of the bridging party. Furthermore, the revocation lifecycles of the original foreign evidence and the ACDC wrapper are decoupled unless a specific governance framework explicitly links them. These considerations are explored further in Section 5.</p>
-<h4 id="normative-schema-for-a-generic-evidence-wrapper"><a class="toc-anchor d-print-none" href="#normative-schema-for-a-generic-evidence-wrapper">§</a> Normative Schema for a Generic Evidence Wrapper</h4>
-<p>To support the ACDC Wrapper pattern, this specification defines the requirements for a generic wrapper ACDC schema. A schema for a generic evidence wrapper MUST include fields to capture:</p>
+<p>Not all evidence exists as a native ACDC. This specification recognizes two
+distinct categories of non-ACDC evidence, each requiring a different treatment:
+opaque file artifacts (photographs, audio recordings, PDFs, genomic data, and
+any other binary or non-JSON content), and foreign credentials (data structures
+from other verifiable credential ecosystems such as W3C Verifiable Credentials
+or ISO mDLs). In both cases, the normatively RECOMMENDED approach is to wrap
+the foreign material in a new ACDC before linking it into the dossier. Direct
+reference to non-ACDC material without a wrapper is NOT RECOMMENDED, as it
+places an untenable burden on the verifier to parse and validate an arbitrary
+foreign format, understand its lifecycle, and locate its revocation mechanism.</p>
+<h4 id="foreign-artifact-wrappers"><a class="toc-anchor d-print-none" href="#foreign-artifact-wrappers">§</a> Foreign Artifact Wrappers</h4>
+<p>Many forms of evidence are opaque file artifacts: photographs, audio and video
+recordings, PDF documents, genomic data files, spreadsheets, and other binary
+content. These formats cannot participate in authenticated data graphs using the
+standard ACDC saidification algorithm, because that algorithm assumes JSON
+content that can be canonicalized and rewritten.</p>
+<p>The solution is to give the artifact a cryptographic identity using one of the
+algorithms defined in the <em>Bytewise and Externalized SAIDs</em> specification [BES],
+and then issue a Foreign Artifact ACDC that attests to the artifact’s identity
+and provenance. The resulting wrapper is a standard ACDC and can be linked into
+a dossier edge like any other evidentum.</p>
+<p>Two algorithms are defined in [BES] for saidifying opaque artifacts:</p>
 <ul>
-<li>The AID of the bridging party (as the issuer of the wrapper).</li>
-<li>The timestamp of the verification event.</li>
-<li>The original foreign evidence, which MAY be embedded directly within the wrapper or referenced via a secure link (e.g., a URL with a hash).</li>
+<li>
+<p>The <strong>bytewise SAID algorithm</strong> (producing a <strong>bSAID</strong>) is appropriate for
+artifacts whose bytes can be rewritten after creation using native tooling —
+for example, a JPEG whose Exif metadata can be updated, or a Markdown file
+where a comment can be inserted. The artifact receives an insertion point
+containing the SAID, making the identifier intrinsic to the artifact’s byte
+stream. A verifier can recover the SAID by scanning the raw bytes for the
+<code>SAID:</code> delimiter defined in [BES].</p>
+</li>
+<li>
+<p>The <strong>externalized SAID algorithm</strong> (producing an <strong>xSAID</strong>) is appropriate
+for artifacts that cannot safely be rewritten after creation — for example,
+a compressed archive, an encrypted file, or a PDF whose cross-reference table
+would be invalidated by arbitrary byte modification. The SAID is carried in
+the filename under a constraint expressed inside the file content via the
+<code>XSAID:</code> delimiter defined in [BES].</p>
+</li>
 </ul>
-<p>A reference (e.g., a URL) to the verification policy or governance framework that the bridging party followed when validating the foreign evidence.</p>
+<p>When neither algorithm is practical — for example, a data stream that was
+captured without an insertion point — the <code>content_digest</code> field of the wrapper
+MAY hold a plain CESR-encoded hash. In this case the integrity guarantee is
+weaker: the hash cannot be discovered by inspecting the artifact itself, only
+by consulting the wrapper.</p>
+<p>In all cases, the CESR encoding of <code>content_digest</code> is self-describing: the
+primitive code identifies the hash algorithm, so no separate algorithm field
+is required.</p>
+<p>A conforming Foreign Artifact wrapper MUST satisfy the following minimum
+requirements:</p>
+<ol>
+<li>It MUST be a valid ACDC with no issuee.</li>
+<li>Its <code>a</code> section MUST contain a <code>content_digest</code> field holding a
+CESR-encoded hash, and a <code>content_type</code> field holding an IANA MIME type
+string.</li>
+<li>The <code>content_digest</code> SHOULD be a bSAID or xSAID as defined in [BES].</li>
+</ol>
+<p>A reference schema and example for a Foreign Artifact ACDC are published
+separately at [FA-SCHEMA]. Implementers MAY define specialized schemas that
+extend the reference schema for domain-specific artifact types, provided the
+minimum requirements above are satisfied.</p>
+<h4 id="bridging-from-foreign-credential-ecosystems"><a class="toc-anchor d-print-none" href="#bridging-from-foreign-credential-ecosystems">§</a> Bridging from Foreign Credential Ecosystems</h4>
+<p>Where the non-ACDC material is itself a verifiable credential from another
+ecosystem — such as a W3C Verifiable Credential or an ISO mDL — a different
+wrapping strategy applies. In this case a designated bridging party obtains
+the foreign credential, verifies it according to its native rules and policies,
+and issues a new ACDC — the bridge wrapper — that attests: “I, the bridging
+party, successfully verified the attached foreign credential on date X according
+to policy Y.” The bridge wrapper is then linked into the dossier using the
+standard ACDC-native mechanism.</p>
+<p>This pattern transforms the problem of verifying a foreign format into the
+problem of trusting the attestation of the bridging party. While this
+standardizes the verification process for the dossier’s consumer, verifiers
+must be aware that trust in the wrapped evidence is contingent on the
+reputation, security practices, and verification policies of the bridging
+party, and that the revocation lifecycle of the original foreign credential
+and the bridge wrapper are decoupled unless a specific governance framework
+explicitly links them.</p>
 <h2 id="the-operational-lifecycle-creation-evolution-and-verification"><a class="toc-anchor d-print-none" href="#the-operational-lifecycle-creation-evolution-and-verification">§</a> The Operational Lifecycle: Creation, Evolution, and Verification</h2>
 <p>The dossier is a persistent, evolving data artifact with a distinct lifecycle encompassing curation, iterative assembly, state management, citation, and verification.</p>
 <h3 id="curation-assembling-and-signing-the-dossier"><a class="toc-anchor d-print-none" href="#curation-assembling-and-signing-the-dossier">§</a> Curation: Assembling and Signing the Dossier</h3>
@@ -927,6 +991,12 @@ legitimacy of its curation.</p>
 [6]: Oh, K.-K., Park, M.-C., and Ahn, H.-S. 2015. A survey of multi-agent formation control. Automatica 53 (March 2015), 424–440. <a href="https://doi.org/10.1016/j.automatica.2014.10.022">https://doi.org/10.1016/j.automatica.2014.10.022</a></p>
 <p>[7]. Fax and Murray
 [7]: Fax, J. A., and Murray, R. M. 2004. Information flow and cooperative control of vehicle formations. IEEE Transactions on Automatic Control 49, 9 (September 2004), 1465–1476. <a href="https://doi.org/10.1109/TAC.2004.834433">https://doi.org/10.1109/TAC.2004.834433</a></p>
+<p>[8] Hardman
+[8]. Hardman, D. “Bytewise and Externalized SAIDs.” 2024.
+<a href="https://dhh1128.github.io/keri-tools">https://dhh1128.github.io/keri-tools</a> (reference implementation);
+canonical paper at [your published URL].</p>
+<p>[9] FA Schema
+[9]. Hardman, D. “Foreign Artifact Credential.” [repo URL].</p>
 
                 </article>
 
