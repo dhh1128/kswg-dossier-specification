@@ -88,7 +88,7 @@ customElements.define("slide-panels",class extends HTMLElement{static get observ
       ],
       "source": "xref",
       "termId": "term:edge",
-      "lastUpdated": "2026-03-17T14:10:02.314Z"
+      "lastUpdated": "2026-03-17T16:18:54.848Z"
     },
     {
       "externalSpec": "KERISuite",
@@ -122,7 +122,7 @@ customElements.define("slide-panels",class extends HTMLElement{static get observ
       ],
       "source": "xref",
       "termId": "term:operator",
-      "lastUpdated": "2026-03-17T14:10:02.315Z",
+      "lastUpdated": "2026-03-17T16:18:54.848Z",
       "firstTrefAlias": "operator"
     }
   ]
@@ -834,6 +834,57 @@ field is intentionally untyped; its meaning is determined by the governance cont
 document, or rulebook under which the dossier was assembled. This allows verifiers
 to evaluate not just the cryptographic integrity of the dossier but the procedural
 legitimacy of its curation.</p>
+</li>
+<li>
+<p><strong><code>incident_dt</code></strong>: An ISO 8601 timestamp of the event or incident that the
+dossier documents — for example, the time of a crash, crime, or filing. This
+is distinct from <code>assembled</code>, which records when the evidence collection was
+curated. In many cases these will differ significantly: an NTSB investigation
+may be assembled months after the accident it documents.</p>
+</li>
+<li>
+<p><strong><code>incident_location</code></strong>: A human-readable or structured description of where
+the incident or subject matter occurred. No single location format is mandated,
+as appropriate precision varies widely by domain: a GPS coordinate pair is
+suitable for a crash site, while a court venue is better expressed as a name
+and jurisdiction code. Implementers operating in domains with established
+location standards SHOULD follow those standards (e.g., ISO 6709 for
+geographic coordinates).</p>
+</li>
+<li>
+<p><strong><code>jurisdiction</code></strong>: The legal or regulatory jurisdiction within which the
+dossier’s subject matter falls, or under whose authority the evidence was
+collected. Expressed as an ISO 3166-1 alpha-2 country code, optionally
+extended with an ISO 3166-2 region or province code (e.g., <code>US-TX</code>, <code>FR</code>,
+<code>CA-ON</code>). Where multiple jurisdictions apply, this field MAY be an array.</p>
+</li>
+<li>
+<p><strong><code>classification</code></strong>: A string identifying the type or category of matter
+the dossier documents. The value space is domain-dependent: a law enforcement
+dossier might use a statute reference or offense code; an NTSB dossier might
+use an event type from the NTSB taxonomy; a court dossier might use a case
+type such as <code>civil</code>, <code>criminal</code>, or <code>appellate</code>. Implementers SHOULD
+reference a controlled vocabulary appropriate to their domain, and MAY
+express this as a URI identifying the vocabulary entry.</p>
+</li>
+<li>
+<p><strong><code>phase</code></strong>: A string indicating the procedural maturity of the dossier at
+the time of issuance — for example, <code>preliminary</code>, <code>factual</code>, or <code>final</code> in
+an NTSB investigation; <code>investigation</code>, <code>adjudication</code>, or <code>closed</code> in a law
+enforcement context. This field is distinct from the revocation or annotation
+state of individual evidence items, which is managed through annotation edges.
+When a dossier transitions between phases, a new version SHOULD be issued
+rather than the existing dossier modified in place.</p>
+</li>
+<li>
+<p><strong><code>governing_rules</code></strong>: A SAID or URI identifying a specific protocol,
+standard, or ruleset that governed the collection of evidence in this dossier
+— for example, a forensic collection protocol, the Federal Rules of Evidence,
+or NTSB investigation procedures. This field is more specific than <code>governance</code>,
+which identifies the framework under which the dossier itself was assembled.
+Both fields MAY be present simultaneously: <code>governance</code> describes who is
+overseeing the dossier, while <code>governing_rules</code> describes what procedural
+constraints applied to the underlying investigation.</p>
 </li>
 </ul>
 <h2 id="joint-issuance"><a class="toc-anchor d-print-none" href="#joint-issuance">§</a> Joint issuance</h2>
