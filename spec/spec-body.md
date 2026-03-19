@@ -56,51 +56,114 @@ This mandated flexibility has a direct consequence for implementers of verifier 
 
 ## Incorporating Evidence
 
-A dossier's primary function is to serve as a container for references to external evidence. This section defines the normative methods for incorporating both ACDC-native and non-ACDC evidence formats.
+A dossier's primary function is to serve as a container for references to
+external evidence. This section defines the normative methods for incorporating
+both ACDC-native and non-ACDC evidence formats.
 
 ### Referencing ACDC-Native Evidence
 
-When a piece of evidence being included in a dossier is itself a valid ACDC (for example, a vettingCredential or a TNAlloc credential as defined in VVP), the corresponding [[ref: edge]] in the dossier's edges block MUST reference that evidence by its SAID and the SAID of its schema.
+When a piece of evidence being included in a dossier is itself a valid ACDC
+(for example, a vettingCredential or a TNAlloc credential as defined in VVP),
+the corresponding edge in the dossier's edges block MUST reference that evidence
+by its SAID and the SAID of its schema.
 
-The value of the edge MUST be a JSON object containing at least the following two keys:
+The value of the edge MUST be a JSON object containing at least the following
+two keys:
 
-* `n`: The SAID of the referenced ACDC. This provides a direct, tamper-evident link to the evidence artifact.
-* `s`: The SAID of the schema to which the referenced ACDC conforms. This allows a verifier to correctly parse and interpret the evidence.
+- `n`: The SAID of the referenced ACDC. This provides a direct, tamper-evident
+  link to the evidence artifact.
+- `s`: The SAID of the schema to which the referenced ACDC conforms. This allows
+  a verifier to correctly parse and interpret the evidence.
 
 This pattern is exemplified by the sample dossier in the VVP specification.
 
 ### Referencing Non-ACDC Evidence
 
-To foster broad interoperability, this specification provides mechanisms for incorporating evidence from other verifiable data ecosystems, such as W3C Verifiable Credentials or ISO mDLs.
+Not all evidence exists as a native ACDC. This specification recognizes two
+distinct categories of non-ACDC evidence, each requiring a different treatment:
+opaque file artifacts (photographs, audio recordings, PDFs, genomic data, and
+any other binary or non-JSON content), and foreign credentials (data structures
+from other verifiable credential ecosystems such as W3C Verifiable Credentials
+or ISO mDLs). In both cases, the normatively RECOMMENDED approach is to wrap
+the foreign material in a new ACDC before linking it into the dossier. Direct
+reference to non-ACDC material without a wrapper is NOT RECOMMENDED, as it
+places an untenable burden on the verifier to parse and validate an arbitrary
+foreign format, understand its lifecycle, and locate its revocation mechanism.
 
-#### Direct Reference by Signature (Discouraged)
+#### Foreign Artifact Wrappers
 
-A dossier MAY include an [[ref: edge]] that references non-ACDC material directly by its digital signature, without declaring a schema for the content. However, this method is NOT RECOMMENDED.
+Many forms of evidence are opaque file artifacts: photographs, audio and video
+recordings, PDF documents, genomic data files, spreadsheets, and other binary
+content. These formats cannot participate in authenticated data graphs using the
+standard ACDC saidification algorithm, because that algorithm assumes JSON
+content that can be canonicalized and rewritten.
 
-The rationale for this recommendation is that direct reference places a significant and often untenable burden on the verifier. The verifier must possess the logic to parse and validate the foreign data format, understand its unique lifecycle, and locate its specific revocation mechanism, if one even exists. Such foreign evidence often has "unpredictable lifespans and undefined schemas," making robust, automated verification difficult and brittle.1
+The solution is to give the artifact a cryptographic identity using one of the
+algorithms defined in the *Bytewise and Externalized SAIDs* specification [BES],
+and then issue a Foreign Artifact ACDC that attests to the artifact's identity
+and provenance. The resulting wrapper is a standard ACDC and can be linked into
+a dossier edge like any other evidentum.
 
-#### The ACDC Wrapper Pattern (Recommended)
+Two algorithms are defined in [BES] for saidifying opaque artifacts:
 
-The normatively RECOMMENDED pattern for including non-ACDC evidence is the "ACDC Wrapper," also referred to as bridging. This pattern externalizes the complexity of handling foreign evidence formats into a dedicated, verifiable attestation.
+- The **bytewise SAID algorithm** (producing a **bSAID**) is appropriate for
+  artifacts whose bytes can be rewritten after creation using native tooling —
+  for example, a JPEG whose Exif metadata can be updated, or a Markdown file
+  where a comment can be inserted. The artifact receives an insertion point
+  containing the SAID, making the identifier intrinsic to the artifact's byte
+  stream. A verifier can recover the SAID by scanning the raw bytes for the
+  `SAID:` delimiter defined in [BES].
 
-The process is as follows:
+- The **externalized SAID algorithm** (producing an **xSAID**) is appropriate
+  for artifacts that cannot safely be rewritten after creation — for example,
+  a compressed archive, an encrypted file, or a PDF whose cross-reference table
+  would be invalidated by arbitrary byte modification. The SAID is carried in
+  the filename under a constraint expressed inside the file content via the
+  `XSAID:` delimiter defined in [BES].
 
-1. A designated entity, hereafter the "bridging party," obtains the non-ACDC evidence.
-1. The bridging party verifies the foreign evidence according to its native rules and policies (e.g., validating the signature and semantics of a W3C Verifiable Credential).
-1. The bridging party then issues a new, standard ACDC—the wrapper—that makes a specific, verifiable assertion, such as: "I, the bridging party, successfully verified the attached foreign evidence on date X according to policy Y".1
-1. This newly created wrapper ACDC is then linked into the dossier using the standard mechanism for ACDC-native evidence described in Section 3.1.
+When neither algorithm is practical — for example, a data stream that was
+captured without an insertion point — the `content_digest` field of the wrapper
+MAY hold a plain CESR-encoded hash. In this case the integrity guarantee is
+weaker: the hash cannot be discovered by inspecting the artifact itself, only
+by consulting the wrapper.
 
-This pattern transforms the problem of verifying a foreign format into the problem of trusting the attestation of the bridging party. While this introduces a new trust consideration, it standardizes the verification process for the dossier's consumer, who now only needs to validate a standard ACDC and assess the reputation of the bridging party. This "trust translation" is a powerful interoperability tool, but it requires careful consideration by verifiers. The verifier's trust in the wrapped evidence is now contingent on the reputation, security practices, and verification policies of the bridging party. Furthermore, the revocation lifecycles of the original foreign evidence and the ACDC wrapper are decoupled unless a specific governance framework explicitly links them. These considerations are explored further in Section 5.
+In all cases, the CESR encoding of `content_digest` is self-describing: the
+primitive code identifies the hash algorithm, so no separate algorithm field
+is required.
 
-#### Normative Schema for a Generic Evidence Wrapper
+A conforming Foreign Artifact wrapper MUST satisfy the following minimum
+requirements:
 
-To support the ACDC Wrapper pattern, this specification defines the requirements for a generic wrapper ACDC schema. A schema for a generic evidence wrapper MUST include fields to capture:
+1. It MUST be a valid ACDC with no issuee.
+2. Its `a` section MUST contain a `content_digest` field holding a
+   CESR-encoded hash, and a `content_type` field holding an IANA MIME type
+   string.
+3. The `content_digest` SHOULD be a bSAID or xSAID as defined in [BES].
 
-* The AID of the bridging party (as the issuer of the wrapper).
-* The timestamp of the verification event.
-* The original foreign evidence, which MAY be embedded directly within the wrapper or referenced via a secure link (e.g., a URL with a hash).
+A reference schema and example for a Foreign Artifact ACDC are published
+separately at [FA-SCHEMA]. Implementers MAY define specialized schemas that
+extend the reference schema for domain-specific artifact types, provided the
+minimum requirements above are satisfied.
 
-A reference (e.g., a URL) to the verification policy or governance framework that the bridging party followed when validating the foreign evidence.
+#### Bridging from Foreign Credential Ecosystems
+
+Where the non-ACDC material is itself a verifiable credential from another
+ecosystem — such as a W3C Verifiable Credential or an ISO mDL — a different
+wrapping strategy applies. In this case a designated bridging party obtains
+the foreign credential, verifies it according to its native rules and policies,
+and issues a new ACDC — the bridge wrapper — that attests: "I, the bridging
+party, successfully verified the attached foreign credential on date X according
+to policy Y." The bridge wrapper is then linked into the dossier using the
+standard ACDC-native mechanism.
+
+This pattern transforms the problem of verifying a foreign format into the
+problem of trusting the attestation of the bridging party. While this
+standardizes the verification process for the dossier's consumer, verifiers
+must be aware that trust in the wrapped evidence is contingent on the
+reputation, security practices, and verification policies of the bridging
+party, and that the revocation lifecycle of the original foreign credential
+and the bridge wrapper are decoupled unless a specific governance framework
+explicitly links them.
 
 ## The Operational Lifecycle: Creation, Evolution, and Verification
 
@@ -168,6 +231,102 @@ The verification process for a dossier requires a citation and a referenceTime a
 
 7. Apply semantic rules: apply application-specific policy rules once cryptographic validation is complete.
 
+### The Attributes Section: Proximate Metadata
+
+A dossier differs from an ordinary ACDC credential in how it uses the attributes
+(`a`) section. In a conventional credential, the `a` section carries the issuer's
+claims about a subject — the substance of what is being asserted. In a dossier,
+the substance of the assertion is the evidence graph, which enters the dossier
+exclusively through edges. The `a` section MUST NOT be used to carry primary
+evidence. Instead, it is reserved for proximate metadata: facts about the dossier
+itself that the issuer wishes to attest directly as part of the act of issuance.
+
+The distinction can be illustrated concretely. An insurance adjustor assembling a
+dossier about a car crash would include photographs of the vehicles, a diagram of
+the intersection, and witness statements as edges — these are the evidence. The
+adjustor's name, the case number, the date the dossier was assembled, and the
+governance framework under which it was produced are metadata about the dossier,
+and belong in the `a` section.
+
+This separation preserves the architectural integrity of the dossier model: edges
+are the mechanism for cryptographically linking to external, independently verifiable
+artifacts, while the `a` section provides the context and provenance that frames
+the evidence collection as a whole.
+
+#### Standard Proximate Metadata Fields
+
+The following fields are defined for use in the `a` section of a dossier. All are
+optional unless a governing schema requires otherwise. Implementers MAY define
+additional fields appropriate to their domain.
+
+- **`assembled`**: An ISO 8601 timestamp recording when the dossier was assembled.
+  This is distinct from the issuance date recorded in the ACDC envelope, which may
+  differ if the dossier was finalized and signed at a later time.
+
+- **`assembler`**: The AID or human-readable name of the entity that curated the
+  evidence collection. This field is most useful when the assembler differs from
+  the issuer — for example, when a staff member compiles the evidence and a senior
+  officer issues the dossier.
+
+- **`purpose`**: A brief, human-readable statement of why the dossier was assembled
+  and what decisions it is intended to support. Example: `"Document evidence of
+  loss for claim #A-2047 per policy terms."` This field is not intended to be
+  machine-interpreted; it serves as a plain-language summary for human reviewers.
+
+- **`ref`**: An external reference identifier, such as a case number, docket number,
+  or transaction ID, that links the dossier to a record in an external system. This
+  field is intentionally untyped; its meaning is determined by the governance context.
+
+- **`governance`**: A SAID or URI referencing the governance framework, policy
+  document, or rulebook under which the dossier was assembled. This allows verifiers
+  to evaluate not just the cryptographic integrity of the dossier but the procedural
+  legitimacy of its curation.
+  
+- **`incident_dt`**: An ISO 8601 timestamp of the event or incident that the
+  dossier documents — for example, the time of a crash, crime, or filing. This
+  is distinct from `assembled`, which records when the evidence collection was
+  curated. In many cases these will differ significantly: an NTSB investigation
+  may be assembled months after the accident it documents.
+
+- **`incident_location`**: A human-readable or structured description of where
+  the incident or subject matter occurred. No single location format is mandated,
+  as appropriate precision varies widely by domain: a GPS coordinate pair is
+  suitable for a crash site, while a court venue is better expressed as a name
+  and jurisdiction code. Implementers operating in domains with established
+  location standards SHOULD follow those standards (e.g., ISO 6709 for
+  geographic coordinates).
+
+- **`jurisdiction`**: The legal or regulatory jurisdiction within which the
+  dossier's subject matter falls, or under whose authority the evidence was
+  collected. Expressed as an ISO 3166-1 alpha-2 country code, optionally
+  extended with an ISO 3166-2 region or province code (e.g., `US-TX`, `FR`,
+  `CA-ON`). Where multiple jurisdictions apply, this field MAY be an array.
+
+- **`classification`**: A string identifying the type or category of matter
+  the dossier documents. The value space is domain-dependent: a law enforcement
+  dossier might use a statute reference or offense code; an NTSB dossier might
+  use an event type from the NTSB taxonomy; a court dossier might use a case
+  type such as `civil`, `criminal`, or `appellate`. Implementers SHOULD
+  reference a controlled vocabulary appropriate to their domain, and MAY
+  express this as a URI identifying the vocabulary entry.
+
+- **`phase`**: A string indicating the procedural maturity of the dossier at
+  the time of issuance — for example, `preliminary`, `factual`, or `final` in
+  an NTSB investigation; `investigation`, `adjudication`, or `closed` in a law
+  enforcement context. This field is distinct from the revocation or annotation
+  state of individual evidence items, which is managed through annotation edges.
+  When a dossier transitions between phases, a new version SHOULD be issued
+  rather than the existing dossier modified in place.
+
+- **`governing_rules`**: A SAID or URI identifying a specific protocol,
+  standard, or ruleset that governed the collection of evidence in this dossier
+  — for example, a forensic collection protocol, the Federal Rules of Evidence,
+  or NTSB investigation procedures. This field is more specific than `governance`,
+  which identifies the framework under which the dossier itself was assembled.
+  Both fields MAY be present simultaneously: `governance` describes who is
+  overseeing the dossier, while `governing_rules` describes what procedural
+  constraints applied to the underlying investigation.
+  
 ## Joint issuance
 It's possible for a dossier to be assembled and signed by a single party. For example, an artist that wishes to collect cryptopgraphic evidence of their creations may do so as a solo activity. However, many dossiers will snapshot evidence contributions from multiple parties, and will thus represent a group work product with some kind of aggregate approval mechanism. In such cases, signing the ACDC that references all the individual pieces of evidence is managed with joint issuance. 
 
@@ -324,14 +483,14 @@ This profile introduces the **Predicate Dossier** pattern, essential for environ
     * *Example:* The dossier asserts `inclusion_criteria_met: true`. The evidence is a ZKP proving that "Subject Age > 18 AND HIV_Status == Positive" without revealing the subject's birthdate or specific medical markers.
 * **Verification:** The verifier validates the cryptographic proof rather than parsing the document, enabling high-assurance compliance without data leakage.
 
-### The petition: the open-endorsement dossier
+### The Petition: The Open-Endorsement Dossier
 
-This profile demonstrates the open-endorsement dossier pattern, designed for cases where the set of participants is large or cannot be fully enumerated at the start of the curation process.
+This profile demonstrates the **Open-Endorsement Dossier** pattern, designed for cases where the set of participants is large or cannot be fully enumerated at the start of the curation process.
 
-* goal: collect a threshold of endorsements from a distributed and potentially dynamic set of signers.
-* key concept: asynchronous threshold satisfaction. Unlike a standard multisig group that requires tight coordination among a fixed set of peers, this pattern allows any aid that satisfies the criteria defined in the dossier schema to contribute an endorsement.
-* mechanism: the [[ref: coordinator]] initiates the dossier and distributes the candidate acdc. participants signify their agreement by anchoring a seal to the dossier said in their individual kels. the dossier uses the MGRP operator to define the conditions for validity, such as a specific count of unique endorsements.
-* verification: a verifier confirms the dossier is valid by observing that the required number of individual kels contain the necessary seals. the [[ref: coordinator]] may choose to finalize the dossier once the target count is reached to simplify this check for third parties.
+- **Goal:** Collect a threshold of endorsements from a distributed and potentially dynamic set of signers.
+- **Key Concept: Asynchronous Threshold Satisfaction.** Unlike a standard multisig group that requires tight coordination among a fixed set of peers, this pattern allows any AID that satisfies the criteria defined in the dossier schema to contribute an endorsement.
+- **Mechanism:** The coordinator initiates the dossier and distributes the candidate ACDC. Participants signify their agreement by anchoring a seal to the dossier SAID in their individual KELs. The dossier uses the `M` operator (optionally combined with `Q`) to define the conditions for validity, such as a specific count of qualified, unique endorsements.
+- **Verification:** A verifier confirms the dossier is valid by observing that the required number of individual KELs contain the necessary seals. The coordinator may choose to finalize the dossier once the target count is reached, simplifying this check for third parties.
 
 [//]: # (\newpage)
 
@@ -361,3 +520,11 @@ This profile demonstrates the open-endorsement dossier pattern, designed for cas
 
 [7]. Fax and Murray
 [7]: Fax, J. A., and Murray, R. M. 2004. Information flow and cooperative control of vehicle formations. IEEE Transactions on Automatic Control 49, 9 (September 2004), 1465–1476. https://doi.org/10.1109/TAC.2004.834433
+
+[8] Hardman
+[8]. Hardman, D. "Bytewise and Externalized SAIDs." 2024.
+https://dhh1128.github.io/keri-tools (reference implementation);
+canonical paper at [your published URL].
+
+[9] FA Schema
+[9]. Hardman, D. "Foreign Artifact Credential." [repo URL].
