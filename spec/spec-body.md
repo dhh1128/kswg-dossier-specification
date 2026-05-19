@@ -52,7 +52,7 @@ A compliant schema for a dossier:
 * SHOULD NOT include an issuee field.
 * SHOULD set the `additionalProperties` keyword to true at the root level and for the edges object. This is a critical design principle that allows issuers to include arbitrary, application-specific edges without invalidating the dossier against the base schema.
 
-This mandated flexibility has a direct consequence for implementers of verifier systems. A generic dossier verifier can be built to perform universal cryptographic validation—confirming signatures, SAIDs, and KEL consistency—for any dossier conforming to the base schema. However, such a generic verifier cannot be expected to understand the full semantics of every possible dossier. For instance, it can verify that an edge labeled "lunarPropertyDeed" is cryptographically linked, but it cannot know what that means or how to process it. Therefore, verification must be understood as a layered process. The first layer, cryptographic validation, is universal and defined by this specification. The second layer, semantic validation (e.g., "Does this dossier contain a valid TNAlloc credential for the phone number in question?"), is necessarily application-specific and requires context-dependent business logic. This separation allows the dossier format to be a universal building block for evidence aggregation across countless current and future use cases.
+This mandated flexibility has a direct consequence for implementers of verifier systems. A generic dossier verifier can perform universal cryptographic validation — confirming signatures, SAIDs, and KEL consistency — for any dossier conforming to the base schema. But such a generic verifier cannot understand the full semantics of every possible dossier. For example, it can verify that an edge labeled "lunarPropertyDeed" is cryptographically linked, but it cannot know what that means or how to process it. Verification is therefore a layered process. The first layer, cryptographic validation, is universal and defined by this specification. The second layer, semantic validation (e.g., "Does this dossier contain a valid TNAlloc credential for the phone number in question?"), is application-specific and requires context-dependent business logic. This separation lets the dossier format serve as a universal building block for evidence aggregation across many current and future use cases.
 
 ## Incorporating Evidence
 
@@ -71,17 +71,17 @@ This pattern is exemplified by the sample dossier in the VVP specification.
 
 ### Referencing Non-ACDC Evidence
 
-To foster broad interoperability, this specification provides mechanisms for incorporating evidence from other verifiable data ecosystems, such as W3C Verifiable Credentials or ISO mDLs.
+To support broad interoperability, this specification provides mechanisms for incorporating evidence from other verifiable data ecosystems, such as W3C Verifiable Credentials or ISO mDLs.
 
 #### Direct Reference by Signature (Discouraged)
 
 A dossier MAY include an [[ref: edge]] that references non-ACDC material directly by its digital signature, without declaring a schema for the content. However, this method is NOT RECOMMENDED.
 
-The rationale for this recommendation is that direct reference places a significant and often untenable burden on the verifier. The verifier must possess the logic to parse and validate the foreign data format, understand its unique lifecycle, and locate its specific revocation mechanism, if one even exists. Such foreign evidence often has unpredictable lifespans and undefined schemas, making robust, automated verification difficult and brittle.
+Direct reference places a heavy, often untenable burden on the verifier. The verifier must have logic to parse and validate the foreign data format, understand its lifecycle, and locate its revocation mechanism — if one even exists. Such foreign evidence often has unpredictable lifespans and undefined schemas, making automated verification difficult and brittle.
 
 #### The ACDC Wrapper Pattern (Recommended)
 
-The normatively RECOMMENDED pattern for including non-ACDC evidence is the "ACDC Wrapper," also referred to as bridging. This pattern externalizes the complexity of handling foreign evidence formats into a dedicated, verifiable attestation.
+The RECOMMENDED pattern for including non-ACDC evidence is the "ACDC Wrapper," also called bridging. This pattern moves the complexity of handling foreign evidence formats into a dedicated, verifiable attestation.
 
 The process is as follows:
 
@@ -90,7 +90,7 @@ The process is as follows:
 3. The bridging party then issues a new, standard ACDC—the wrapper—that makes a specific, verifiable assertion, such as: "I, the bridging party, successfully verified the attached foreign evidence on date X according to policy Y."
 4. This newly created wrapper ACDC is then linked into the dossier using the standard mechanism for ACDC-native evidence described in Section 3.1.
 
-This pattern transforms the problem of verifying a foreign format into the problem of trusting the attestation of the bridging party. While this introduces a new trust consideration, it standardizes the verification process for the dossier's consumer, who now only needs to validate a standard ACDC and assess the reputation of the bridging party. This "trust translation" is a powerful interoperability tool, but it requires careful consideration by verifiers. The verifier's trust in the wrapped evidence is now contingent on the reputation, security practices, and verification policies of the bridging party. Furthermore, the revocation lifecycles of the original foreign evidence and the ACDC wrapper are decoupled unless a specific governance framework explicitly links them. These considerations are explored further in Section 5.
+This pattern transforms the problem of verifying a foreign format into the problem of trusting the attestation of the bridging party. It introduces a new trust consideration but standardizes verification for the dossier's consumer, who now only needs to validate a standard ACDC and assess the reputation of the bridging party. This "trust translation" is a useful interoperability tool, but it requires care from verifiers: trust in the wrapped evidence is now contingent on the reputation, security practices, and verification policies of the bridging party. Also, the revocation lifecycles of the original foreign evidence and the ACDC wrapper are decoupled unless a specific governance framework explicitly links them. See Section 5 for more discussion.
 
 #### Normative Schema for a Generic Evidence Wrapper
 
@@ -116,7 +116,7 @@ The normative steps for dossier curation are as follows:
 
 2. Assembly: The issuer or [[ref: collector]] constructs the dossier ACDC data structure. This involves creating an edges block and populating it with named links that point to each acquired evidence artifact, as described in Section 3.
 
-3. Iterative assembly and versioning: Some dossiers are static, but with others, as new evidence is collected or the status of investigation changes, the dossier evolves. To support this, [[ref: collector]]s MAY issue new versions of a dossier. A new version MUST be a valid ACDC that links to the previous version via a prev [[ref: edge]] or a schema-specific equivalent. This creates a verifiable chain of the dossier's history, allowing verifiers to traverse back through the lineage of the evidence collection.
+3. Iterative assembly and versioning: Some dossiers are static; others evolve as new evidence is collected or as the status of an investigation changes. To support this, [[ref: collector]]s MAY issue new versions of a dossier. A new version MUST be a valid ACDC that links to the previous version via a prev [[ref: edge]] or a schema-specific equivalent. This creates a verifiable chain of the dossier's history, letting verifiers traverse the lineage of the evidence collection.
 
 4. Issuance initiation: For single-issuer dossiers, the [[ref: collector]] signs the fully assembled dossier ACDC. For joint issuance, the [[ref: collector]] provides the drafted ACDC to a [[ref: coordinator]]. The [[ref: coordinator]] then coordinates the signing or anchoring process among the designated members.
 
@@ -126,7 +126,7 @@ The normative steps for dossier curation are as follows:
 
 ### State Management and Metadata Overlays
 
-For dossiers used in procedural contexts (e.g., legal proceedings, insurance adjustments), the mere existence of evidence is insufficient; its status relative to the procedure matters. An artifact may be "marked for identification," "admitted," "objected to," or "stricken." Because ACDCs are immutable, an issuer cannot simply modify the metadata of an existing [[ref: edge]].
+For dossiers used in procedural contexts (e.g., legal proceedings, insurance adjustments), the existence of evidence alone is not enough; its status relative to the procedure matters. An artifact may be "marked for identification," "admitted," "objected to," or "stricken." Because ACDCs are immutable, an issuer cannot simply modify the metadata of an existing [[ref: edge]].
 
 To manage these state transitions, dossiers MUST employ **Annotation Edges**. An annotation edge is an edge in a new version of the dossier that points to an artifact (or an edge) in a previous version. The payload of the annotation edge carries the new state or ruling. For example, a "Court Case Dossier v2" might contain an edge labeled `ruling_101` that points to the SAID of `exhibit_A` (from v1) with the attribute `status: "admitted"`. Verifiers MUST process the dossier by traversing the graph to resolve the "effective state" of each piece of evidence, applying the latest annotations found in the chain.
 
@@ -169,18 +169,18 @@ The verification process for a dossier requires a citation and a referenceTime a
 7. Apply semantic rules: apply application-specific policy rules once cryptographic validation is complete.
 
 ## Joint issuance
-It's possible for a dossier to be assembled and signed by a single party. For example, an artist who wishes to collect cryptographic evidence of their creations may do so as a solo activity. However, many dossiers will snapshot evidence contributions from multiple parties, and will thus represent a group work product with some kind of aggregate approval mechanism. In such cases, signing the ACDC that references all the individual pieces of evidence is managed with joint issuance. 
+A dossier can be assembled and signed by a single party. For example, an artist who wishes to collect cryptographic evidence of their creations may do so alone. But many dossiers snapshot evidence contributions from multiple parties, representing a group work product with some kind of aggregate approval mechanism. In such cases, signing the ACDC that references all the individual pieces of evidence is managed through joint issuance.
 
 ### Logic
-Joint issuance is best understood not as a single, uniform approach to approval, but as a family or style of approval strategies. It maps onto the problem domain of coordinated control in multi-agent systems, which has been formally studied in robotics, AI, military science, and similar fields. Three variants of cooperative control are regularly mentioned in the literature: [5, 6, 7]
+Joint issuance is best understood as a family of approval strategies, not a single uniform approach. It maps onto the problem of coordinated control in multi-agent systems, which has been formally studied in robotics, AI, military science, and similar fields. Three variants of cooperative control are regularly cited in the literature [[5]] [[6]] [[7]]:
 
-* leader-follower 
+* leader-follower
 * behavior-based control
 * virtual structures
 
-Approval of a dossier can be accomplished with any of these variants, and this specification normatively describes success using primitives that are relevant to all three. Our description below will focus on the leader-follower approach because it is the simplest to understand, and it lends itself to deterministic guarantees most easily. Regardless of the cooperative control mechanism that's chosen, the process involves asynchronous signing activity that converges on a common goal, possibly with significant elapsed time. Unlike group multisig, which requires synchronous agreement on key event log (KEL) sequence numbers, joint issuance relies on logic within the ACDC layer. This allows members to contribute signatures or seals to a dossier at different times and via different channels without immediate impact on a shared KEL.
+A dossier can be approved using any of these variants, and this specification normatively describes success using primitives that apply to all three. The description below focuses on the leader-follower approach because it is the simplest to explain and most readily yields deterministic guarantees. Whichever cooperative control mechanism is chosen, the process involves asynchronous signing activity that converges on a common goal, possibly over a long span of time. Unlike group multisig, which requires synchronous agreement on key event log (KEL) sequence numbers, joint issuance relies on logic within the ACDC layer. This lets members contribute signatures or seals to a dossier at different times and through different channels without immediately affecting a shared KEL.
 
-The validity of a jointly issued dossier is determined by the satisfaction of a [[ref: threshold-operator, threshold operator]] within its [[ref: edge]] graph. The logic is decoupled from key management. This permits higher flexibility in how issuance is achieved and verified.
+The validity of a jointly issued dossier is determined by satisfying a [[ref: threshold-operator, threshold operator]] within its [[ref: edge]] graph. The logic is decoupled from key management. This allows more flexibility in how issuance is achieved and verified.
 
 ### Leader-follower roles
 When joint issuance is coordinated with a leader-follower strategy, three distinct roles emerge, that may be performed by the same or different entities:
@@ -239,7 +239,7 @@ The foundation of this trust is the KERI witness infrastructure. Witnesses are i
 
 ### Long-term Auditability and Historical Analysis
 
-The KERI-based dossier ecosystem supports robust, long-lived auditing. Because KELs provide a complete, verifiable, and sequenced history of an identifier's key state, a verifier can perform validation for any arbitrary point in the past. 
+The KERI-based dossier ecosystem supports long-lived auditing. Because KELs provide a complete, verifiable, and sequenced history of an identifier's key state, a verifier can perform validation as of any point in the past.
 
 This capability is critical for use cases involving compliance and legal discovery. An auditor can determine if a dossier and its entire evidence graph were valid at the time of a transaction, based on the key states and revocation information known at that moment. This provides non-repudiable historical accountability.
 
@@ -263,17 +263,17 @@ Even with the use of graduated disclosure, verifiers may be able to correlate ac
 
 Where privacy is a requirement, implementers should employ strategies to mitigate these correlation vectors.
 
-For the citation signer AID: the AID used for signing transactional messages can be rotated frequently without affecting the long-lived AID of the dossier issuer. Furthermore, a service provider signing on behalf of many clients can maintain a pool of AIDs to provide herd privacy and break correlation.
+For the citation signer AID: the AID used for signing transactional messages can be rotated frequently without affecting the long-lived AID of the dossier issuer. A service provider signing on behalf of many clients can also maintain a pool of AIDs to provide herd privacy and break correlation.
 
 For the dossier SAID: to break the link between a transaction and a persistent dossier SAID, a trusted third party or blinding service MAY be used. This service can verify an original dossier and then issue a new, short-lived, derivative dossier. This derivative dossier attests to the validity of the original without revealing its SAID to the end verifier.
 
 ### Contractually Protected Disclosure
 
-Technical privacy mechanisms can be augmented with legal and contractual controls. A server hosting a dossier MAY be configured to enforce access control policies. For example, it could serve a redacted, privacy-preserving version of a dossier to any anonymous request but require a cryptographically signed request to access a more expanded version. The act of signing the request can be tied to the verifier's agreement to terms regarding data privacy, creating a verifiable audit trail of who accessed sensitive information.
+Technical privacy mechanisms can be combined with legal and contractual controls. A server hosting a dossier MAY enforce access control policies. For example, it could serve a redacted, privacy-preserving version of a dossier to any anonymous request but require a cryptographically signed request to access a fuller version. The act of signing the request can be tied to the verifier's agreement to data-privacy terms, creating a verifiable audit trail of who accessed sensitive information.
 
 ## Use Cases and Architectural Patterns
 
-The following use cases illustrate distinct architectural patterns for deploying dossiers. Each profile highlights a different combination of grouping strategies, state management, and trust delegation, demonstrating the dossier's flexibility across diverse domains.
+The following use cases illustrate distinct architectural patterns for deploying dossiers. Each profile highlights a different combination of grouping strategies, state management, and trust delegation, showing the dossier's flexibility across diverse domains.
 
 ### Verifiable Voice Protocol (VVP): The Compositional Dossier
 
@@ -298,10 +298,10 @@ This profile illustrates the **Procedural Dossier** pattern, which manages the c
 
 ### Investigative Journalism: The Redacted Dossier
 
-This profile demonstrates the **Redacted Dossier** pattern, designed to reconcile the conflict between the need for public verification and the obligation to protect confidential sources.
+This profile demonstrates the **Redacted Dossier** pattern, which reconciles the conflict between the need for public verification and the obligation to protect confidential sources.
 
 * **Goal:** Prove the existence and provenance of source material without revealing the source's identity.
-* **Key Concept: The Precursor Link.** This pattern utilizes the Cross-File Association (CFA) concept of "precursor" relationships.
+* **Key Concept: The Precursor Link.** This pattern uses the Cross-File Association (CFA) concept of "precursor" relationships.
     * **The Private Graph:** The journalist holds a "Source Asset" (e.g., an unredacted recording of a whistleblower).
     * **The Public Graph:** The journalist publishes a "Redacted Asset" (e.g., a transcript with names removed).
 * **Mechanism:** The public dossier links to the Redacted Asset. Internally, the Redacted Asset is cryptographically linked to the Source Asset via a "blinded" edge—typically a hash of the original file. This allows the journalist to prove, at a future date (e.g., declassification), that the redacted text was indeed derived from the specific original recording, without having exposed the source during the investigation.
@@ -316,7 +316,7 @@ The Mortgage Qualification profile illustrates the **Snapshot Dossier** pattern,
 
 ### Clinical Trials: The Predicate Dossier
 
-This profile introduces the **Predicate Dossier** pattern, essential for environments with strict privacy regulations (e.g., HIPAA, GDPR) where raw data cannot be shared.
+This profile introduces the **Predicate Dossier** pattern, useful in environments with strict privacy regulations (e.g., HIPAA, GDPR) where raw data cannot be shared.
 
 * **Goal:** Prove eligibility or compliance without disclosing the underlying sensitive data.
 * **Key Concept: Zero-Knowledge Predicates.**
