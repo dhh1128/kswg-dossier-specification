@@ -4,7 +4,7 @@
 
 ### Core Structure: The Dossier as an ACDC
 
-A dossier MUST be a valid Authentic Chained Data Container (ACDC) as defined in the ACDC specification.2
+A dossier MUST be a valid Authentic Chained Data Container (ACDC) as defined in the ACDC specification [[2]].
 
 ### The Role of the Issuer
 
@@ -12,7 +12,7 @@ The issuer of a dossier is the entity that curates the collection of [[ref: evid
 
 ### The Edges Attribute: Linking to Evidence
 
-The primary payload of a dossier is not a set of direct claims, but rather a graph of references to external [[ref: evidence]]. This graph is contained within an [[ref: edges]] block (`e`), as defined in the ACDC specification.[[2]] This block MUST contain a JSON object where each key is a semantic label for an edge, and each value is an object describing the link to the external evidence.
+The primary payload of a dossier is not a set of direct claims, but rather a graph of references to external [[ref: evidence]]. This graph is contained within an [[ref: edges]] block (`e`), as defined in the ACDC specification [[2]]. This block MUST contain a JSON object where each key is a semantic label for an edge, and each value is an object describing the link to the external evidence.
 
 A dossier MAY contain an unbounded number of edges, reflecting its core purpose of aggregating an arbitrary quantity and variety of evidence. The field names (keys) for these edges MAY be any valid JSON string, allowing issuers to provide semantically meaningful labels for the linked evidence (e.g.,
 "vettingCredential", "forensicReport_01", "tnAllocationProof"), as demonstrated in the Verifiable Voice Protocol (VVP) specification.
@@ -47,7 +47,7 @@ A compliant schema for a dossier:
     ```
 
 * MUST define fields within the ACDC `a` section for [[ref: proximate-metadata]].
-* MUST use the ACDC `e` section ([[ref: edges]]) to bind to the dossier to all evidenta, and MUST NOT place any evidenta in the `a` section.
+* MUST use the ACDC `e` section ([[ref: edges]]) to bind the dossier to all evidenta, and MUST NOT place any evidenta in the `a` section.
 * MAY include edges that are for traditional ACDC relationships but not for evidenta.
 * SHOULD NOT include an issuee field.
 * SHOULD set the `additionalProperties` keyword to true at the root level and for the edges object. This is a critical design principle that allows issuers to include arbitrary, application-specific edges without invalidating the dossier against the base schema.
@@ -99,12 +99,12 @@ standard ACDC saidification algorithm, because that algorithm assumes JSON
 content that can be canonicalized and rewritten.
 
 The solution is to give the artifact a cryptographic identity using one of the
-algorithms defined in the *Bytewise and Externalized SAIDs* specification [BES],
+algorithms defined in the *Bytewise and Externalized SAIDs* specification [[8]],
 and then issue a Foreign Artifact ACDC that attests to the artifact's identity
 and provenance. The resulting wrapper is a standard ACDC and can be linked into
 a dossier edge like any other evidentum.
 
-Two algorithms are defined in [BES] for saidifying opaque artifacts:
+Two algorithms are defined in [[8]] for saidifying opaque artifacts:
 
 - The **bytewise SAID algorithm** (producing a **bSAID**) is appropriate for
   artifacts whose bytes can be rewritten after creation using native tooling —
@@ -112,14 +112,14 @@ Two algorithms are defined in [BES] for saidifying opaque artifacts:
   where a comment can be inserted. The artifact receives an insertion point
   containing the SAID, making the identifier intrinsic to the artifact's byte
   stream. A verifier can recover the SAID by scanning the raw bytes for the
-  `SAID:` delimiter defined in [BES].
+  `SAID:` delimiter defined in [[8]].
 
 - The **externalized SAID algorithm** (producing an **xSAID**) is appropriate
   for artifacts that cannot safely be rewritten after creation — for example,
   a compressed archive, an encrypted file, or a PDF whose cross-reference table
   would be invalidated by arbitrary byte modification. The SAID is carried in
   the filename under a constraint expressed inside the file content via the
-  `XSAID:` delimiter defined in [BES].
+  `XSAID:` delimiter defined in [[8]].
 
 When neither algorithm is practical — for example, a data stream that was
 captured without an insertion point — the `content_digest` field of the wrapper
@@ -138,10 +138,10 @@ requirements:
 2. Its `a` section MUST contain a `content_digest` field holding a
    CESR-encoded hash, and a `content_type` field holding an IANA MIME type
    string.
-3. The `content_digest` SHOULD be a bSAID or xSAID as defined in [BES].
+3. The `content_digest` SHOULD be a bSAID or xSAID as defined in [[8]].
 
 A reference schema and example for a Foreign Artifact ACDC are published
-separately at [FA-SCHEMA]. Implementers MAY define specialized schemas that
+separately at [[9]]. Implementers MAY define specialized schemas that
 extend the reference schema for domain-specific artifact types, provided the
 minimum requirements above are satisfied.
 
@@ -171,11 +171,11 @@ The dossier is a persistent, evolving data artifact with a distinct lifecycle en
 
 ### Curation: Assembling and Signing the Dossier
 
-Curation is the process of creating a dossier. This phase is typically performed in advance of any real-time transaction and involves the assembly and attestation of the evidence collection.1
+Curation is the process of creating a dossier. This phase is typically performed in advance of any real-time transaction and involves the assembly and attestation of the evidence collection.
 
 The normative steps for dossier curation are as follows:
 
-1. Evidence acquisition: The entity intending to issue the dossier first acquires the necessary evidence from their respective authoritative sources. For example, a business might obtain a legal entity vetting credential from a qualified issuer, a telephone number allocation credential from its carrier, and a brand credential from a brand vetter.1
+1. Evidence acquisition: The entity intending to issue the dossier first acquires the necessary evidence from their respective authoritative sources. For example, a business might obtain a legal entity vetting credential from a qualified issuer, a telephone number allocation credential from its carrier, and a brand credential from a brand vetter.
 
 2. Assembly: The issuer or [[ref: collector]] constructs the dossier ACDC data structure. This involves creating an edges block and populating it with named links that point to each acquired evidence artifact, as described in Section 3.
 
@@ -206,7 +206,7 @@ The dossier then links to this static, timestamped Observation Attestation. This
 
 ### Citation: Referencing the Dossier in Protocols
 
-Because dossiers are designed to be stable, long-lived, and potentially large data structures, they are generally not transmitted in their entirety within real-time communication protocols. Instead, they are cited.1
+Because dossiers are designed to be stable, long-lived, and potentially large data structures, they are generally not transmitted in their entirety within real-time communication protocols. Instead, they are cited.
 
 A citation is a reference that allows a verifier to locate and retrieve the full dossier. The normative requirement for a dossier citation is that it MUST be a resolvable identifier that enables a verifier to fetch the complete and unmodified dossier ACDC. The canonical implementation of this is the Out-of-Band Invitation (OOBI) URL used in the evd (evidence) claim of a VVP passport. An OOBI is a specialized URL that points to a resource serving the ACDC and its associated KERI proofs.
 
@@ -328,10 +328,10 @@ additional fields appropriate to their domain.
   constraints applied to the underlying investigation.
   
 ## Joint issuance
-It's possible for a dossier to be assembled and signed by a single party. For example, an artist that wishes to collect cryptopgraphic evidence of their creations may do so as a solo activity. However, many dossiers will snapshot evidence contributions from multiple parties, and will thus represent a group work product with some kind of aggregate approval mechanism. In such cases, signing the ACDC that references all the individual pieces of evidence is managed with joint issuance. 
+A dossier may be assembled and signed by a single party. For example, an artist who wishes to collect cryptographic evidence of their creations may do so as a solo activity. However, many dossiers will snapshot evidence contributions from multiple parties, and will thus represent a group work product with some kind of aggregate approval mechanism. In such cases, signing the ACDC that references all the individual pieces of evidence is managed with joint issuance. 
 
 ### Logic
-Joint issuance is best understood not as a single, uniform approach to approval, but as a family or style of approval strategies. It maps onto the problem domain of coordinated control in multi-agent systems, which has been formally studied in robotics, AI, military science, and similar fields. Three variants of cooperative control are regularly mentioned in the literature: [5, 6, 7]
+Joint issuance is best understood not as a single, uniform approach to approval, but as a family or style of approval strategies. It maps onto the problem domain of coordinated control in multi-agent systems, which has been formally studied in robotics, AI, military science, and similar fields. Three variants of cooperative control are regularly mentioned in the literature [[5]] [[6]] [[7]]:
 
 * leader-follower 
 * behavior-based control
@@ -354,7 +354,7 @@ A joint issuance must satisfy an m-ary threshold operator defined in the edge se
 ### New operators for joint issuance
 The following operators are defined to support the logic of joint issuance within the edges block:
 
-* `M`: a [[ref: threshold operator]] that declares that issuance is accomplished by satisfying an endorser count. This number MUST be expressed via a corresponding field on the edge, `m`. The presence of this operator triggers a requirement that the set of corresponding signers MUST be represented in the edges of the edge group to which the operator is attached. Use of the `M` operator also means that valid *potential* signers (as opposed to *actual* signers in the edge) MAY be enumerated in advance. In such a case, the enumeration MUST occur in the attributes (root `a` object) section of the ACDC, and MUST consist of an array of AIDs. If a field named `mgrp` appears as a property on the same edge as `M`, it MUST name the field in the attributes section where this enumeration occurs. If `mgrp` does not appear as a property on `M`'s edge group, then the enumeration of potential signers MUST be given in a field named `mgrp` in the attributes section. Thus, the `M` operator with enumerated potential signers embodies an *m of n* approval pattern with `m` supplying its threshold, and the cardinality of potential signers enumerated in in `mgrp` providing the logical upper bound, *n*. An example of this pattern might be a judicial decision jointly issued by *m* of *n* justices, where the AIDs of the judges are enumerated and *m* constitutes a majority. An `M` operator that does not enumerate valid potential signers MAY instead be combined with the `Q` operator to model an unbounded number of potential signers who nonetheless must be qualified in some way; see below.
+* `M`: a [[ref: threshold operator]] that declares that issuance is accomplished by satisfying an endorser count. This number MUST be expressed via a corresponding field on the edge, `m`. The presence of this operator triggers a requirement that the set of corresponding signers MUST be represented in the edges of the edge group to which the operator is attached. Use of the `M` operator also means that valid *potential* signers (as opposed to *actual* signers in the edge) MAY be enumerated in advance. In such a case, the enumeration MUST occur in the attributes (root `a` object) section of the ACDC, and MUST consist of an array of AIDs. If a field named `mgrp` appears as a property on the same edge as `M`, it MUST name the field in the attributes section where this enumeration occurs. If `mgrp` does not appear as a property on `M`'s edge group, then the enumeration of potential signers MUST be given in a field named `mgrp` in the attributes section. Thus, the `M` operator with enumerated potential signers embodies an *m of n* approval pattern with `m` supplying its threshold, and the cardinality of potential signers enumerated in `mgrp` providing the logical upper bound, *n*. An example of this pattern might be a judicial decision jointly issued by *m* of *n* justices, where the AIDs of the judges are enumerated and *m* constitutes a majority. An `M` operator that does not enumerate valid potential signers MAY instead be combined with the `Q` operator to model an unbounded number of potential signers who nonetheless must be qualified in some way; see below.
 * `RM`: a [[ref: revocation operator]] that declares that revocation is accomplished by satisfying a revoker count. `RM` has parallel semantics to `M`, but its corresponding numeric field on the edge is `rm`, and its potential revokers are enumerated in an `rmgrp` field in the attributes section, or in an attribute field with the name specified in the `rmgrp` field on the edge. This flexibility allows the set of revokers to be identical to the set of endorsers used for `M`, to overlap that set, or to be entirely disjoint, and allows the threshold for revocation to differ from the threshold for issuance.
 * `Q`: A qualification operator that determines a standard of proof that must be met by signers. When this operator is present, the edge must also contain a `qschema` property that describes the proof that must exist, plus a `qev` array that enumerates edges of evidence presented by each signer as proof of qualification.
 * `FIN`: a [[ref: finalization operator]] that signals whether a verifier should expect a finalization event in a KEL. Recording a finalization event in the KEL allows verifiers to predict where aggregate evidence may be collected for easy review. Without it, a verifier must collect evidence of joint issuance signatures from disparate locations.
@@ -521,10 +521,8 @@ This profile demonstrates the **Open-Endorsement Dossier** pattern, designed for
 [7]. Fax and Murray
 [7]: Fax, J. A., and Murray, R. M. 2004. Information flow and cooperative control of vehicle formations. IEEE Transactions on Automatic Control 49, 9 (September 2004), 1465–1476. https://doi.org/10.1109/TAC.2004.834433
 
-[8] Hardman
 [8]. Hardman, D. "Bytewise and Externalized SAIDs." 2024.
-https://dhh1128.github.io/keri-tools (reference implementation);
-canonical paper at [your published URL].
+[8]: https://dhh1128.github.io/keri-tools
 
-[9] FA Schema
-[9]. Hardman, D. "Foreign Artifact Credential." [repo URL].
+[9]. Hardman, D. "Foreign Artifact Credential."
+[9]: https://dhh1128.github.io/keri-tools
