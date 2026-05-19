@@ -12,10 +12,9 @@ The issuer of a dossier is the entity that curates the collection of [[ref: evid
 
 ### The Edges Attribute: Linking to Evidence
 
-The primary payload of a dossier is not a set of direct claims, but rather a graph of references to external [[ref: evidence]]. This graph is contained within an [[ref: edges]] block (`e`), as defined in the ACDC specification.[[2]] This block MUST contain a JSON object where each key is a semantic label for an edge, and each value is an object describing the link to the external evidence.
+The primary payload of a dossier is not a set of direct claims but a graph of references to external [[ref: evidence]]. The ACDC specification [[2]] places this graph in an [[ref: edges]] block (`e`). This block MUST contain a JSON object in which each key is a semantic label for an edge and each value is an object describing the link to the external evidence.
 
-A dossier MAY contain an unbounded number of edges, reflecting its core purpose of aggregating an arbitrary quantity and variety of evidence. The field names (keys) for these edges MAY be any valid JSON string, allowing issuers to provide semantically meaningful labels for the linked evidence (e.g.,
-"vettingCredential", "forensicReport_01", "tnAllocationProof"), as demonstrated in the Verifiable Voice Protocol (VVP) specification.
+A dossier MAY contain an unbounded number of edges, reflecting its core purpose of aggregating an arbitrary quantity and variety of evidence. The field names (keys) for these edges MAY be any valid JSON string. This lets issuers give semantically meaningful labels to the linked evidence (e.g., "vettingCredential", "forensicReport_01", "tnAllocationProof"), as shown in the Verifiable Voice Protocol (VVP) specification.
 
 ### Base JSON-Schema Definition
 
@@ -223,11 +222,11 @@ Revocation logic in a joint issuance MAY be defined independently of issuance lo
 
 ### Integrity and Non-Repudiation Via KERI
 
-The security of the dossier model is founded on the cryptographic primitives provided by KERI and ACDC.
+The security of the dossier model rests on the cryptographic primitives provided by KERI and ACDC.
 
-Integrity: The integrity of the dossier and all ACDC-native evidence within its graph is guaranteed by the use of self-addressing identifiers (SAIDs). A SAID is a cryptographic hash of an object's canonical content. Any modification to the data results in a different SAID, making tampering immediately evident.
+Integrity: Self-addressing identifiers (SAIDs) guarantee the integrity of the dossier and all ACDC-native evidence in its graph. A SAID is a cryptographic hash of an object's canonical content. Any modification to the data produces a different SAID, making tampering immediately evident.
 
-Non-repudiation: The act of issuing a dossier is made non-repudiable by digital signatures. These signatures are cryptographically anchored in a key event log (KEL), which serves as a permanent, publicly auditable, and tamper-evident log of all significant actions. In joint issuance, non-repudiation is achieved through the collective anchors of all participating members in their respective KELs. A finalization event, if used, provides a single cryptographic record of this consensus.
+Non-repudiation: Digital signatures make the act of issuing a dossier non-repudiable. These signatures are cryptographically anchored in a key event log (KEL), which serves as a permanent, publicly auditable, and tamper-evident log of all significant actions. In joint issuance, the collective anchors of all participating members in their respective KELs provide non-repudiation. A finalization event, if used, provides a single cryptographic record of this consensus.
 
 ### Replay Attack Mitigation in Citation Protocols
 
@@ -239,7 +238,7 @@ To mitigate this, any protocol that cites a dossier MUST incorporate ephemeral, 
 
 The dossier model operates on a decentralized root of trust. A verifier does not rely on a single authority but makes explicit trust decisions about a plurality of evidence issuers. In joint issuance, this trust is distributed across the member AIDs defined in the threshold.
 
-The foundation of this trust is the KERI witness infrastructure. Witnesses are independent services that act as notaries for an AID's KEL. By requiring an issuer to report its key events to a set of witnesses, the system gains high availability and duplicity detection. Verifiers SHOULD consult multiple witnesses to ensure they have a consistent and complete view of an issuer's KEL, protecting against duplicity and compromise.
+The foundation of this trust is the KERI witness infrastructure. Witnesses are independent services that act as notaries for an AID's KEL. Requiring an issuer to report its key events to a set of witnesses gives the system high availability and duplicity detection. Verifiers SHOULD consult multiple witnesses to ensure they have a consistent and complete view of an issuer's KEL, protecting against duplicity and compromise.
 
 ### Long-term Auditability and Historical Analysis
 
