@@ -42,6 +42,24 @@ In both the physical and digital realms, critical decisions are rarely based on 
 
 In the digital world, this aggregation process is fraught with challenges. The core problem is the absence of a standardized, cryptographically secure method that aggregates diverse pieces of evidence, attests to the integrity of the collection, and manages its lifecycle in a decentralized and interoperable manner. Existing systems for evidence management are often siloed within proprietary platforms, dependent on centralized trusted parties, or lack the cryptographic guarantees necessary for high-assurance environments. This fragmentation creates friction, inhibits interoperability across domains (e.g., between different jurisdictions or industries), and introduces single points of failure that can be compromised or become unavailable.
 
+### Evidence Lifespans and Verification Timing
+
+A second observation shapes the dossier design: the evidence underlying real-world decisions has wildly different lifespans, and the parties who later verify that evidence are usually not in contact with the signer at the moment of verification.
+
+Some evidence is **temporary**. A movie ticket, a JSON Web Token, a browser session cookie, or a transient network message carries authority for seconds or minutes — just long enough to complete a single interaction in a controlled environment.
+
+Other evidence is **changed occasionally**. A PIN, a password, a credit-card number, an X.509 certificate, or a magnetic key card carries a secret that the holder rotates on a scale of days to months as it expires or is suspected of compromise.
+
+A third class is **effectively permanent**. A birth certificate, a passport, articles of incorporation, a fingerprint or iris template, or a chain-of-custody record on a piece of forensic evidence anchors a fact that is meant to be relied on for years or decades.
+
+A dossier inhabits the permanent end of this spectrum. It snapshots evidence that the issuer expects to remain meaningful and verifiable long after issuance, in front of audiences and against questions the issuer cannot anticipate at signing time. Verifiers may consume a dossier indirectly: an auditor reviewing a loan years after funding, a court evaluating a chain of custody decades after collection, an insurance adjuster reconstructing facts about an incident years before the claim. None of these verifiers communicates with the issuer at the moment of verification.
+
+This asynchronous, indirect verification model has three direct consequences for the dossier design:
+
+1. **The artifact must stand alone.** Verification cannot depend on a live channel back to the issuer at verification time.
+2. **Recency and freshness vary per evidentum.** A bank balance referenced in a mortgage dossier may need to be less than a week old; an LEI vetting may be acceptable up to a year old; a passport scan may be acceptable for the document's full validity period. The dossier model accommodates these mixed timelines through per-edge metadata and Temporal Pinning, not through a single global expiry.
+3. **State must be reconstructible at an arbitrary historical point.** Verification at time T requires the key state, revocation state, and evidence state that were effective at T — not necessarily at the moment of verification. This is supported by KERI's historical-query capability over its KELs.
+
 ### Introducing the Dossier: An Issuer-Centric Evidence Container
 This specification introduces the dossier as a solution to these challenges. A dossier is formally defined as an Authentic Chained Data Container (ACDC) that references an arbitrarily rich collection of signed evidence and is issued by the party that assembles it. It is a container designed to create a verifiable data graph from evidentiary artifacts.
 
