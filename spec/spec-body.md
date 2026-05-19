@@ -157,12 +157,12 @@ to policy Y." The bridge wrapper is then linked into the dossier using the
 standard ACDC-native mechanism.
 
 This pattern transforms the problem of verifying a foreign format into the
-problem of trusting the attestation of the bridging party. While this
-standardizes the verification process for the dossier's consumer, verifiers
-must be aware that trust in the wrapped evidence is contingent on the
+problem of trusting the attestation of the bridging party. That standardizes
+the verification process for the dossier's consumer, but verifiers must keep
+two caveats in mind. First, trust in the wrapped evidence depends on the
 reputation, security practices, and verification policies of the bridging
-party, and that the revocation lifecycle of the original foreign credential
-and the bridge wrapper are decoupled unless a specific governance framework
+party. Second, the revocation lifecycles of the original foreign credential
+and of the bridge wrapper are decoupled unless a specific governance framework
 explicitly links them.
 
 ## The Operational Lifecycle: Creation, Evolution, and Verification
@@ -241,10 +241,10 @@ exclusively through edges. The `a` section MUST NOT be used to carry primary
 evidence. Instead, it is reserved for proximate metadata: facts about the dossier
 itself that the issuer wishes to attest directly as part of the act of issuance.
 
-The distinction can be illustrated concretely. An insurance adjustor assembling a
+The distinction can be illustrated concretely. An insurance adjuster assembling a
 dossier about a car crash would include photographs of the vehicles, a diagram of
 the intersection, and witness statements as edges — these are the evidence. The
-adjustor's name, the case number, the date the dossier was assembled, and the
+adjuster's name, the case number, the date the dossier was assembled, and the
 governance framework under which it was produced are metadata about the dossier,
 and belong in the `a` section.
 
@@ -328,7 +328,7 @@ additional fields appropriate to their domain.
   constraints applied to the underlying investigation.
   
 ## Joint issuance
-A dossier may be assembled and signed by a single party. For example, an artist who wishes to collect cryptographic evidence of their creations may do so as a solo activity. However, many dossiers will snapshot evidence contributions from multiple parties, and will thus represent a group work product with some kind of aggregate approval mechanism. In such cases, signing the ACDC that references all the individual pieces of evidence is managed with joint issuance. 
+A dossier may be assembled and signed by a single party. For example, an artist who wishes to collect cryptographic evidence of their creations may do so as a solo activity. However, many dossiers snapshot evidence contributions from multiple parties, and so represent a group work product that needs an aggregate approval mechanism. In such cases, signing the ACDC that references all the individual pieces of evidence is managed with joint issuance.
 
 ### Logic
 Joint issuance is best understood not as a single, uniform approach to approval, but as a family or style of approval strategies. It maps onto the problem domain of coordinated control in multi-agent systems, which has been formally studied in robotics, AI, military science, and similar fields. Three variants of cooperative control are regularly mentioned in the literature [[5]] [[6]] [[7]]:
@@ -337,9 +337,9 @@ Joint issuance is best understood not as a single, uniform approach to approval,
 * behavior-based control
 * virtual structures
 
-Approval of a dossier can be accomplished with any of these variants, and this specification normatively describes success using primitives that are relevant to all three. Our description below will focus on the leader-follower approach because it is the simplest to understand, and it lends itself to deterministic guarantees most easily. Regardless of the cooperative control mechanism that's chosen, the process involves asynchronous signing activity that converges on a common goal, possibly with significant elapsed time. Unlike group multisig, which requires synchronous agreement on key event log (KEL) sequence numbers, joint issuance relies on logic within the ACDC layer. This allows members to contribute signatures or seals to a dossier at different times and via different channels without immediate impact on a shared KEL.
+A dossier can be approved using any of these variants, and this specification normatively describes success using primitives relevant to all three. The description below focuses on the leader-follower approach because it is the simplest to understand and lends itself most easily to deterministic guarantees. Whatever cooperative control mechanism is chosen, the process involves asynchronous signing that converges on a common goal, possibly over a significant span of time. Unlike group multisig, which requires synchronous agreement on key event log (KEL) sequence numbers, joint issuance relies on logic within the ACDC layer. This lets members contribute signatures or seals to a dossier at different times and via different channels without immediate impact on a shared KEL.
 
-The validity of a jointly issued dossier is determined by the satisfaction of a [[ref: threshold-operator, threshold operator]] within its [[ref: edge]] graph. The logic is decoupled from key management. This permits higher flexibility in how issuance is achieved and verified.
+The validity of a jointly issued dossier is determined by satisfying a [[ref: threshold-operator, threshold operator]] within its [[ref: edge]] graph. Because the logic is decoupled from key management, issuance and verification have more flexibility.
 
 ### Leader-follower roles
 When joint issuance is coordinated with a leader-follower strategy, three distinct roles emerge, that may be performed by the same or different entities:
@@ -354,7 +354,7 @@ A joint issuance must satisfy an m-ary threshold operator defined in the edge se
 ### New operators for joint issuance
 The following operators are defined to support the logic of joint issuance within the edges block:
 
-* `M`: a [[ref: threshold operator]] that declares that issuance is accomplished by satisfying an endorser count. This number MUST be expressed via a corresponding field on the edge, `m`. The presence of this operator triggers a requirement that the set of corresponding signers MUST be represented in the edges of the edge group to which the operator is attached. Use of the `M` operator also means that valid *potential* signers (as opposed to *actual* signers in the edge) MAY be enumerated in advance. In such a case, the enumeration MUST occur in the attributes (root `a` object) section of the ACDC, and MUST consist of an array of AIDs. If a field named `mgrp` appears as a property on the same edge as `M`, it MUST name the field in the attributes section where this enumeration occurs. If `mgrp` does not appear as a property on `M`'s edge group, then the enumeration of potential signers MUST be given in a field named `mgrp` in the attributes section. Thus, the `M` operator with enumerated potential signers embodies an *m of n* approval pattern with `m` supplying its threshold, and the cardinality of potential signers enumerated in `mgrp` providing the logical upper bound, *n*. An example of this pattern might be a judicial decision jointly issued by *m* of *n* justices, where the AIDs of the judges are enumerated and *m* constitutes a majority. An `M` operator that does not enumerate valid potential signers MAY instead be combined with the `Q` operator to model an unbounded number of potential signers who nonetheless must be qualified in some way; see below.
+* `M`: a [[ref: threshold operator]] that declares that issuance is accomplished by satisfying an endorser count. This number MUST be expressed via a corresponding field on the edge, `m`. The presence of this operator triggers a requirement that the set of corresponding signers MUST be represented in the edges of the edge group to which the operator is attached. The `M` operator also allows valid *potential* signers (as opposed to *actual* signers in the edge) to be enumerated in advance. When they are, the enumeration MUST occur in the attributes (root `a` object) section of the ACDC, and MUST consist of an array of AIDs. If a field named `mgrp` appears as a property on the same edge as `M`, it MUST name the field in the attributes section where this enumeration occurs. If `mgrp` does not appear as a property on `M`'s edge group, then the enumeration of potential signers MUST be given in a field named `mgrp` in the attributes section. The `M` operator with enumerated potential signers thus embodies an *m of n* approval pattern: `m` supplies the threshold, and the cardinality of potential signers enumerated in `mgrp` provides the logical upper bound *n*. An example is a judicial decision jointly issued by *m* of *n* justices, where the AIDs of the judges are enumerated and *m* constitutes a majority. An `M` operator that does not enumerate valid potential signers MAY instead be combined with the `Q` operator to model an unbounded number of potential signers who must still be qualified in some way; see below.
 * `RM`: a [[ref: revocation operator]] that declares that revocation is accomplished by satisfying a revoker count. `RM` has parallel semantics to `M`, but its corresponding numeric field on the edge is `rm`, and its potential revokers are enumerated in an `rmgrp` field in the attributes section, or in an attribute field with the name specified in the `rmgrp` field on the edge. This flexibility allows the set of revokers to be identical to the set of endorsers used for `M`, to overlap that set, or to be entirely disjoint, and allows the threshold for revocation to differ from the threshold for issuance.
 * `Q`: A qualification operator that determines a standard of proof that must be met by signers. When this operator is present, the edge must also contain a `qschema` property that describes the proof that must exist, plus a `qev` array that enumerates edges of evidence presented by each signer as proof of qualification.
 * `FIN`: a [[ref: finalization operator]] that signals whether a verifier should expect a finalization event in a KEL. Recording a finalization event in the KEL allows verifiers to predict where aggregate evidence may be collected for easy review. Without it, a verifier must collect evidence of joint issuance signatures from disparate locations.
