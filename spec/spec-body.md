@@ -191,7 +191,7 @@ The normative steps for dossier curation are as follows:
 
 For dossiers used in procedural contexts (e.g., legal proceedings, insurance adjustments), the mere existence of evidence is insufficient; its status relative to the procedure matters. An artifact may be "marked for identification," "admitted," "objected to," or "stricken." Because ACDCs are immutable, an issuer cannot simply modify the metadata of an existing [[ref: edge]].
 
-To manage these state transitions, dossiers MUST employ **Annotation Edges**. An annotation edge is an edge in a new version of the dossier that points to an artifact (or an edge) in a previous version. The payload of the annotation edge carries the new state or ruling. For example, a "Court Case Dossier v2" might contain an edge labeled `ruling_101` that points to the SAID of `exhibit_A` (from v1) with the attribute `status: "admitted"`. Verifiers MUST process the dossier by traversing the graph to resolve the "effective state" of each piece of evidence, applying the latest annotations found in the chain.
+To manage these state transitions, dossiers MUST use **Annotation Edges**. An annotation edge is an edge in a new version of the dossier that points to an artifact (or an edge) in a previous version. The payload of the annotation edge carries the new state or ruling. For example, a "Court Case Dossier v2" might contain an edge labeled `ruling_101` that points to the SAID of `exhibit_A` (from v1) with the attribute `status: "admitted"`. Verifiers MUST process the dossier by traversing the graph to resolve the "effective state" of each piece of evidence, applying the latest annotations found in the chain.
 
 ### Temporal Pinning
 
@@ -416,9 +416,9 @@ Implementers MAY define additional derivative forms — for example, a summary t
 
 The security of the dossier model is founded on the cryptographic primitives provided by KERI and ACDC.
 
-Integrity: The integrity of the dossier and all ACDC-native evidence within its graph is guaranteed by the use of self-addressing identifiers (SAIDs). A SAID is a cryptographic hash of an object's canonical content. Any modification to the data results in a different SAID, making tampering immediately evident.
+Integrity: Self-addressing identifiers (SAIDs) guarantee the integrity of the dossier and all ACDC-native evidence within its graph. A SAID is a cryptographic hash of an object's canonical content. Any modification to the data results in a different SAID, making tampering immediately evident.
 
-Non-repudiation: The act of issuing a dossier is made non-repudiable by digital signatures. These signatures are cryptographically anchored in a key event log (KEL), which serves as a permanent, publicly auditable, and tamper-evident log of all significant actions. In joint issuance, non-repudiation is achieved through the collective anchors of all participating members in their respective KELs. A finalization event, if used, provides a single cryptographic record of this consensus.
+Non-repudiation: Digital signatures make the act of issuing a dossier non-repudiable. These signatures are cryptographically anchored in a key event log (KEL), which serves as a permanent, publicly auditable, and tamper-evident log of all significant actions. In joint issuance, the collective anchors of all participating members in their respective KELs provide non-repudiation. A finalization event, if used, provides a single cryptographic record of this consensus.
 
 ### Replay Attack Mitigation in Citation Protocols
 
