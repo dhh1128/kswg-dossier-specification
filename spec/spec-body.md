@@ -528,3 +528,8 @@ canonical paper at [your published URL].
 
 [9] FA Schema
 [9]. Hardman, D. "Foreign Artifact Credential." [repo URL].
+
+[10] W3C VC Data Model
+[10]. Sporny, M., Longley, D., Sabadello, M., Reed, D., Steele, O., and Allen,
+C., Eds. "Verifiable Credentials Data Model v2.0." W3C Recommendation.
+https://www.w3.org/TR/vc-data-model-2.0/

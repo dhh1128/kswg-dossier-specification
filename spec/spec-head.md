@@ -84,6 +84,27 @@ Analogy | Affidavit / Case File | License / Passport | Custom-Generated Report
 Creation Time | In advance of use | In advance of use | In response to a query
 Content Focus | Graph of external evidence | Attributes of the issuee | Subset of existing evidence
 
+### Relationship to W3C Verifiable Presentations
+
+Readers familiar with the W3C Verifiable Credentials Data Model [[10]] may see a surface resemblance between a dossier and a Verifiable Presentation (VP). Both are cryptographically verifiable containers of evidence presented in support of a decision. They solve different problems, however, and the differences are worth making explicit.
+
+Aspect | Dossier (ACDC-based) | Verifiable Presentation (W3C VC)
+--- | --- | ---
+Core role | Cryptographically verifiable container of evidence | Cryptographically verifiable container of credentials
+Interoperability model | Wraps or bridges multiple evidence formats, including VCs | Native to the VC ecosystem; interoperable within that model
+Primary actor | Curator (often the issuer) attests to the composition of the evidence collection | Holder presents credentials about a subject
+Subject model | No issuee; may describe arbitrary parties, events, or facts | Subject-centric; in practice typically the holder
+Payload structure | Graph of references (edges) to heterogeneous evidence | Flat bundle (usually VCs) responding to a proof request
+Lifecycle | Pre-curated, persistent, versioned, cacheable artifact | Ephemeral, generated per request or interaction
+Evidence flexibility | Files, ACDCs, foreign credentials, and wrapped artifacts; supports chained trust | Flexible in theory; in practice limited to VCs and similar credentials
+Trust semantics | "This is the complete evidence set I assembled" | "I possess valid credentials proving these claims"
+
+The most consequential practical difference is lifecycle. A VP is created in response to a verifier's request, signed by the holder, presented once, and discarded; if the same holder is asked again later, a new VP is generated. A dossier is assembled in advance, signed by the curator (not the subject), published at a stable location, and referenced repeatedly across many verifiers and many transactions.
+
+A second practical difference is the relationship to the subject. A VP is fundamentally a statement by a subject about themselves: "I hold these credentials." A dossier has no issuee. It is a statement by a curator about a body of evidence: "I assembled these artifacts about this matter, and here is the cryptographic record of that act." Many dossier use cases — a criminal investigation, a journalistic exposé, an audit report — do not have a single subject in the VC sense at all.
+
+These differences do not put the two models in opposition. A dossier MAY reference a W3C VC as one of its evidence items through the bridging mechanism described under *Bridging from Foreign Credential Ecosystems*. The two artifacts solve adjacent problems and can interoperate where their use cases overlap.
+
 ## Status of This Memo
 
 Information about the current status of this document, any errata,
