@@ -434,7 +434,7 @@ The foundation of this trust is the KERI witness infrastructure. Witnesses are i
 
 ### Long-term Auditability and Historical Analysis
 
-The KERI-based dossier ecosystem supports robust, long-lived auditing. Because KELs provide a complete, verifiable, and sequenced history of an identifier's key state, a verifier can perform validation for any arbitrary point in the past. 
+The KERI-based dossier ecosystem supports long-lived auditing. Because KELs provide a complete, verifiable, and sequenced history of an identifier's key state, a verifier can perform validation for any arbitrary point in the past. 
 
 This capability is critical for use cases involving compliance and legal discovery. An auditor can determine if a dossier and its entire evidence graph were valid at the time of a transaction, based on the key states and revocation information known at that moment. This provides non-repudiable historical accountability.
 
@@ -456,9 +456,9 @@ Even with the use of graduated disclosure, verifiers may be able to correlate ac
 
 ### Mitigation Strategies for Unwanted Correlation
 
-Where privacy is a requirement, implementers should employ strategies to mitigate these correlation vectors.
+Where privacy is a requirement, implementers should use strategies to mitigate these correlation vectors.
 
-For the citation signer AID: the AID used for signing transactional messages can be rotated frequently without affecting the long-lived AID of the dossier issuer. Furthermore, a service provider signing on behalf of many clients can maintain a pool of AIDs to provide herd privacy and break correlation.
+For the citation signer AID: the AID used for signing transactional messages can be rotated frequently without affecting the long-lived AID of the dossier issuer. A service provider signing on behalf of many clients can also maintain a pool of AIDs to provide herd privacy and break correlation.
 
 For the dossier SAID: to break the link between a transaction and a persistent dossier SAID, a trusted third party or blinding service MAY be used. This service can verify an original dossier and then issue a new, short-lived, derivative dossier. This derivative dossier attests to the validity of the original without revealing its SAID to the end verifier.
 
@@ -496,7 +496,7 @@ This profile illustrates the **Procedural Dossier** pattern, which manages the c
 This profile demonstrates the **Redacted Dossier** pattern, designed to reconcile the conflict between the need for public verification and the obligation to protect confidential sources.
 
 * **Goal:** Prove the existence and provenance of source material without revealing the source's identity.
-* **Key Concept: The Precursor Link.** This pattern utilizes the Cross-File Association (CFA) concept of "precursor" relationships.
+* **Key Concept: The Precursor Link.** This pattern uses the Cross-File Association (CFA) concept of "precursor" relationships.
     * **The Private Graph:** The journalist holds a "Source Asset" (e.g., an unredacted recording of a whistleblower).
     * **The Public Graph:** The journalist publishes a "Redacted Asset" (e.g., a transcript with names removed).
 * **Mechanism:** The public dossier links to the Redacted Asset. Internally, the Redacted Asset is cryptographically linked to the Source Asset via a "blinded" edge—typically a hash of the original file. This allows the journalist to prove, at a future date (e.g., declassification), that the redacted text was indeed derived from the specific original recording, without having exposed the source during the investigation.
