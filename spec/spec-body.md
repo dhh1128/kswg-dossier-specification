@@ -349,14 +349,14 @@ When joint issuance is coordinated with a leader-follower strategy, three distin
 * Finalizer: any entity that, upon observing that an issuance threshold is met, submits a finalization event to a KEL.
 
 ### Threshold mechanics
-A joint issuance must satisfy an m-ary threshold operator defined in the edge section of the dossier ACDC. A schema may define the required threshold and the set of possible signers. Alternatively, a schema may defer these definitions to the dossier instance, allowing the threshold rules to be actualized only when the issuance is proposed.
+A joint issuance MUST satisfy an m-ary threshold operator defined in the edge section of the dossier ACDC. A schema MAY define the required threshold and the set of possible signers. Alternatively, a schema MAY defer these definitions to the dossier instance, allowing the threshold rules to be actualized only when the issuance is proposed.
 
 ### New operators for joint issuance
 The following operators are defined to support the logic of joint issuance within the edges block:
 
 * `M`: a [[ref: threshold operator]] that declares that issuance is accomplished by satisfying an endorser count. This number MUST be expressed via a corresponding field on the edge, `m`. The presence of this operator triggers a requirement that the set of corresponding signers MUST be represented in the edges of the edge group to which the operator is attached. The `M` operator also allows valid *potential* signers (as opposed to *actual* signers in the edge) to be enumerated in advance. When they are, the enumeration MUST occur in the attributes (root `a` object) section of the ACDC, and MUST consist of an array of AIDs. If a field named `mgrp` appears as a property on the same edge as `M`, it MUST name the field in the attributes section where this enumeration occurs. If `mgrp` does not appear as a property on `M`'s edge group, then the enumeration of potential signers MUST be given in a field named `mgrp` in the attributes section. The `M` operator with enumerated potential signers thus embodies an *m of n* approval pattern: `m` supplies the threshold, and the cardinality of potential signers enumerated in `mgrp` provides the logical upper bound *n*. An example is a judicial decision jointly issued by *m* of *n* justices, where the AIDs of the judges are enumerated and *m* constitutes a majority. An `M` operator that does not enumerate valid potential signers MAY instead be combined with the `Q` operator to model an unbounded number of potential signers who must still be qualified in some way; see below.
 * `RM`: a [[ref: revocation operator]] that declares that revocation is accomplished by satisfying a revoker count. `RM` has parallel semantics to `M`, but its corresponding numeric field on the edge is `rm`, and its potential revokers are enumerated in an `rmgrp` field in the attributes section, or in an attribute field with the name specified in the `rmgrp` field on the edge. This flexibility allows the set of revokers to be identical to the set of endorsers used for `M`, to overlap that set, or to be entirely disjoint, and allows the threshold for revocation to differ from the threshold for issuance.
-* `Q`: A qualification operator that determines a standard of proof that must be met by signers. When this operator is present, the edge must also contain a `qschema` property that describes the proof that must exist, plus a `qev` array that enumerates edges of evidence presented by each signer as proof of qualification.
+* `Q`: A qualification operator that determines a standard of proof that signers MUST meet. When this operator is present, the edge MUST also contain a `qschema` property that describes the proof that must exist, plus a `qev` array that enumerates edges of evidence presented by each signer as proof of qualification.
 * `FIN`: a [[ref: finalization operator]] that signals whether a verifier should expect a finalization event in a KEL. Recording a finalization event in the KEL allows verifiers to predict where aggregate evidence may be collected for easy review. Without it, a verifier must collect evidence of joint issuance signatures from disparate locations.
 
 ### Finalization
@@ -366,7 +366,7 @@ A [[ref: coordinator]] MAY choose to finalize a joint issuance to assist verifie
 2. Allocation: the [[ref: finalizer]] allocates the next sequence number in the relevant KEL, which is typically a group AID.
 3. Anchoring: the [[ref: finalizer]] attaches the threshold-satisfying proofs to a KEL event and submits it for witnessing.
 
-If a finalization event is present, a verifier should use it as the definitive proof of issuance. If absent, a verifier must poll the individual KELs of all possible participants to determine if the threshold has been met.
+If a finalization event is present, a verifier SHOULD use it as the definitive proof of issuance. If absent, a verifier MUST poll the individual KELs of all possible participants to determine whether the threshold has been met.
 
 ### Revocation
 Revocation logic in a joint issuance may be defined independently of issuance logic.
@@ -388,13 +388,13 @@ Non-repudiation: Digital signatures make the act of issuing a dossier non-repudi
 
 The dossier itself is a stable, long-lived artifact designed for reuse. As such, the primary risk of replay attacks exists at the level of the protocol that cites it. An attacker could capture a valid citation message and re-submit it in a different context.
 
-To mitigate this, any protocol that cites a dossier must incorporate ephemeral, context-specific data into the payload that is cryptographically signed. This data must bind the citation to a unique transaction using timestamps to create a narrow window of validity, originator and destination identifiers, and unique nonces to prevent identical replays.
+To mitigate this, any protocol that cites a dossier MUST incorporate ephemeral, context-specific data into the payload that is cryptographically signed. This data MUST bind the citation to a unique transaction using timestamps to create a narrow window of validity, originator and destination identifiers, and unique nonces to prevent identical replays.
 
 ### Verifier Trust and Root of Trust Management
 
 The dossier model operates on a decentralized root of trust. A verifier does not rely on a single authority but makes explicit trust decisions about a plurality of evidence issuers. In joint issuance, this trust is distributed across the member AIDs defined in the threshold.
 
-The foundation of this trust is the KERI witness infrastructure. Witnesses are independent services that act as notaries for an AID's KEL. By requiring an issuer to report its key events to a set of witnesses, the system gains high availability and duplicity detection. Verifiers should consult multiple witnesses to ensure they have a consistent and complete view of an issuer's KEL, thereby protecting against duplicity and compromise.
+The foundation of this trust is the KERI witness infrastructure. Witnesses are independent services that act as notaries for an AID's KEL. By requiring an issuer to report its key events to a set of witnesses, the system gains high availability and duplicity detection. Verifiers SHOULD consult multiple witnesses to ensure they have a consistent and complete view of an issuer's KEL, thereby protecting against duplicity and compromise.
 
 ### Long-term Auditability and Historical Analysis
 
@@ -420,7 +420,7 @@ Even with the use of graduated disclosure, verifiers may be able to correlate ac
 
 ### Mitigation Strategies for Unwanted Correlation
 
-Where privacy is a requirement, implementers should use strategies to mitigate these correlation vectors.
+Where privacy is a requirement, implementers SHOULD use strategies to mitigate these correlation vectors.
 
 For the citation signer AID: the AID used for signing transactional messages can be rotated frequently without affecting the long-lived AID of the dossier issuer. A service provider signing on behalf of many clients can also maintain a pool of AIDs to provide herd privacy and break correlation.
 
