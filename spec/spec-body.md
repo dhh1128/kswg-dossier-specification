@@ -4,7 +4,7 @@
 
 ### Core Structure: The Dossier as an ACDC
 
-A dossier MUST be a valid Authentic Chained Data Container (ACDC) as defined in the ACDC specification.2
+A dossier MUST be a valid Authentic Chained Data Container (ACDC) as defined in the ACDC specification [[2]].
 
 ### The Role of the Issuer
 
@@ -77,7 +77,7 @@ To foster broad interoperability, this specification provides mechanisms for inc
 
 A dossier MAY include an [[ref: edge]] that references non-ACDC material directly by its digital signature, without declaring a schema for the content. However, this method is NOT RECOMMENDED.
 
-The rationale for this recommendation is that direct reference places a significant and often untenable burden on the verifier. The verifier must possess the logic to parse and validate the foreign data format, understand its unique lifecycle, and locate its specific revocation mechanism, if one even exists. Such foreign evidence often has "unpredictable lifespans and undefined schemas," making robust, automated verification difficult and brittle.1
+The rationale for this recommendation is that direct reference places a significant and often untenable burden on the verifier. The verifier must possess the logic to parse and validate the foreign data format, understand its unique lifecycle, and locate its specific revocation mechanism, if one even exists. Such foreign evidence often has unpredictable lifespans and undefined schemas, making robust, automated verification difficult and brittle.
 
 #### The ACDC Wrapper Pattern (Recommended)
 
@@ -86,9 +86,9 @@ The normatively RECOMMENDED pattern for including non-ACDC evidence is the "ACDC
 The process is as follows:
 
 1. A designated entity, hereafter the "bridging party," obtains the non-ACDC evidence.
-1. The bridging party verifies the foreign evidence according to its native rules and policies (e.g., validating the signature and semantics of a W3C Verifiable Credential).
-1. The bridging party then issues a new, standard ACDC—the wrapper—that makes a specific, verifiable assertion, such as: "I, the bridging party, successfully verified the attached foreign evidence on date X according to policy Y".1
-1. This newly created wrapper ACDC is then linked into the dossier using the standard mechanism for ACDC-native evidence described in Section 3.1.
+2. The bridging party verifies the foreign evidence according to its native rules and policies (e.g., validating the signature and semantics of a W3C Verifiable Credential).
+3. The bridging party then issues a new, standard ACDC—the wrapper—that makes a specific, verifiable assertion, such as: "I, the bridging party, successfully verified the attached foreign evidence on date X according to policy Y."
+4. This newly created wrapper ACDC is then linked into the dossier using the standard mechanism for ACDC-native evidence described in Section 3.1.
 
 This pattern transforms the problem of verifying a foreign format into the problem of trusting the attestation of the bridging party. While this introduces a new trust consideration, it standardizes the verification process for the dossier's consumer, who now only needs to validate a standard ACDC and assess the reputation of the bridging party. This "trust translation" is a powerful interoperability tool, but it requires careful consideration by verifiers. The verifier's trust in the wrapped evidence is now contingent on the reputation, security practices, and verification policies of the bridging party. Furthermore, the revocation lifecycles of the original foreign evidence and the ACDC wrapper are decoupled unless a specific governance framework explicitly links them. These considerations are explored further in Section 5.
 
@@ -108,11 +108,11 @@ The dossier is a persistent, evolving data artifact with a distinct lifecycle en
 
 ### Curation: Assembling and Signing the Dossier
 
-Curation is the process of creating a dossier. This phase is typically performed in advance of any real-time transaction and involves the assembly and attestation of the evidence collection.1
+Curation is the process of creating a dossier. This phase is typically performed in advance of any real-time transaction and involves the assembly and attestation of the evidence collection.
 
 The normative steps for dossier curation are as follows:
 
-1. Evidence acquisition: The entity intending to issue the dossier first acquires the necessary evidence from their respective authoritative sources. For example, a business might obtain a legal entity vetting credential from a qualified issuer, a telephone number allocation credential from its carrier, and a brand credential from a brand vetter.1
+1. Evidence acquisition: The entity intending to issue the dossier first acquires the necessary evidence from their respective authoritative sources. For example, a business might obtain a legal entity vetting credential from a qualified issuer, a telephone number allocation credential from its carrier, and a brand credential from a brand vetter.
 
 2. Assembly: The issuer or [[ref: collector]] constructs the dossier ACDC data structure. This involves creating an edges block and populating it with named links that point to each acquired evidence artifact, as described in Section 3.
 
@@ -143,7 +143,7 @@ The dossier then links to this static, timestamped Observation Attestation. This
 
 ### Citation: Referencing the Dossier in Protocols
 
-Because dossiers are designed to be stable, long-lived, and potentially large data structures, they are generally not transmitted in their entirety within real-time communication protocols. Instead, they are cited.1
+Because dossiers are designed to be stable, long-lived, and potentially large data structures, they are generally not transmitted in their entirety within real-time communication protocols. Instead, they are cited.
 
 A citation is a reference that allows a verifier to locate and retrieve the full dossier. The normative requirement for a dossier citation is that it MUST be a resolvable identifier that enables a verifier to fetch the complete and unmodified dossier ACDC. The canonical implementation of this is the Out-of-Band Invitation (OOBI) URL used in the evd (evidence) claim of a VVP passport. An OOBI is a specialized URL that points to a resource serving the ACDC and its associated KERI proofs.
 
@@ -169,7 +169,7 @@ The verification process for a dossier requires a citation and a referenceTime a
 7. Apply semantic rules: apply application-specific policy rules once cryptographic validation is complete.
 
 ## Joint issuance
-It's possible for a dossier to be assembled and signed by a single party. For example, an artist that wishes to collect cryptopgraphic evidence of their creations may do so as a solo activity. However, many dossiers will snapshot evidence contributions from multiple parties, and will thus represent a group work product with some kind of aggregate approval mechanism. In such cases, signing the ACDC that references all the individual pieces of evidence is managed with joint issuance. 
+It's possible for a dossier to be assembled and signed by a single party. For example, an artist who wishes to collect cryptographic evidence of their creations may do so as a solo activity. However, many dossiers will snapshot evidence contributions from multiple parties, and will thus represent a group work product with some kind of aggregate approval mechanism. In such cases, signing the ACDC that references all the individual pieces of evidence is managed with joint issuance. 
 
 ### Logic
 Joint issuance is best understood not as a single, uniform approach to approval, but as a family or style of approval strategies. It maps onto the problem domain of coordinated control in multi-agent systems, which has been formally studied in robotics, AI, military science, and similar fields. Three variants of cooperative control are regularly mentioned in the literature: [5, 6, 7]
@@ -195,7 +195,7 @@ A joint issuance must satisfy an m-ary threshold operator defined in the edge se
 ### New operators for joint issuance
 The following operators are defined to support the logic of joint issuance within the edges block:
 
-* `M`: a [[ref: threshold operator]] that declares that issuance is accomplished by satisfying an endorser count. This number MUST be expressed via a corresponding field on the edge, `m`. The presence of this operator triggers a requirement that the set of corresponding signers MUST be represented in the edges of the edge group to which the operator is attached. Use of the `M` operator also means that valid *potential* signers (as opposed to *actual* signers in the edge) MAY be enumerated in advance. In such a case, the enumeration MUST occur in the attributes (root `a` object) section of the ACDC, and MUST consist of an array of AIDs. If a field named `mgrp` appears as a property on the same edge as `M`, it MUST name the field in the attributes section where this enumeration occurs. If `mgrp` does not appear as a property on `M`'s edge group, then the enumeration of potential signers MUST be given in a field named `mgrp` in the attributes section. Thus, the `M` operator with enumerated potential signers embodies an *m of n* approval pattern with `m` supplying its threshold, and the cardinality of potential signers enumerated in in `mgrp` providing the logical upper bound, *n*. An example of this pattern might be a judicial decision jointly issued by *m* of *n* justices, where the AIDs of the judges are enumerated and *m* constitutes a majority. An `M` operator that does not enumerate valid potential signers MAY instead be combined with the `Q` operator to model an unbounded number of potential signers who nonetheless must be qualified in some way; see below.
+* `M`: a [[ref: threshold operator]] that declares that issuance is accomplished by satisfying an endorser count. This number MUST be expressed via a corresponding field on the edge, `m`. The presence of this operator triggers a requirement that the set of corresponding signers MUST be represented in the edges of the edge group to which the operator is attached. Use of the `M` operator also means that valid *potential* signers (as opposed to *actual* signers in the edge) MAY be enumerated in advance. In such a case, the enumeration MUST occur in the attributes (root `a` object) section of the ACDC, and MUST consist of an array of AIDs. If a field named `mgrp` appears as a property on the same edge as `M`, it MUST name the field in the attributes section where this enumeration occurs. If `mgrp` does not appear as a property on `M`'s edge group, then the enumeration of potential signers MUST be given in a field named `mgrp` in the attributes section. Thus, the `M` operator with enumerated potential signers embodies an *m of n* approval pattern with `m` supplying its threshold, and the cardinality of potential signers enumerated in `mgrp` providing the logical upper bound, *n*. An example of this pattern might be a judicial decision jointly issued by *m* of *n* justices, where the AIDs of the judges are enumerated and *m* constitutes a majority. An `M` operator that does not enumerate valid potential signers MAY instead be combined with the `Q` operator to model an unbounded number of potential signers who nonetheless must be qualified in some way; see below.
 * `RM`: a [[ref: revocation operator]] that declares that revocation is accomplished by satisfying a revoker count. `RM` has parallel semantics to `M`, but its corresponding numeric field on the edge is `rm`, and its potential revokers are enumerated in an `rmgrp` field in the attributes section, or in an attribute field with the name specified in the `rmgrp` field on the edge. This flexibility allows the set of revokers to be identical to the set of endorsers used for `M`, to overlap that set, or to be entirely disjoint, and allows the threshold for revocation to differ from the threshold for issuance.
 * `Q`: A qualification operator that determines a standard of proof that must be met by signers. When this operator is present, the edge must also contain a `qschema` property that describes the proof that must exist, plus a `qev` array that enumerates edges of evidence presented by each signer as proof of qualification.
 * `FIN`: a [[ref: finalization operator]] that signals whether a verifier should expect a finalization event in a KEL. Recording a finalization event in the KEL allows verifiers to predict where aggregate evidence may be collected for easy review. Without it, a verifier must collect evidence of joint issuance signatures from disparate locations.
@@ -324,14 +324,14 @@ This profile introduces the **Predicate Dossier** pattern, essential for environ
     * *Example:* The dossier asserts `inclusion_criteria_met: true`. The evidence is a ZKP proving that "Subject Age > 18 AND HIV_Status == Positive" without revealing the subject's birthdate or specific medical markers.
 * **Verification:** The verifier validates the cryptographic proof rather than parsing the document, enabling high-assurance compliance without data leakage.
 
-### The petition: the open-endorsement dossier
+### The Petition: The Open-Endorsement Dossier
 
-This profile demonstrates the open-endorsement dossier pattern, designed for cases where the set of participants is large or cannot be fully enumerated at the start of the curation process.
+This profile demonstrates the **Open-Endorsement Dossier** pattern, designed for cases where the set of participants is large or cannot be fully enumerated at the start of the curation process.
 
-* goal: collect a threshold of endorsements from a distributed and potentially dynamic set of signers.
-* key concept: asynchronous threshold satisfaction. Unlike a standard multisig group that requires tight coordination among a fixed set of peers, this pattern allows any aid that satisfies the criteria defined in the dossier schema to contribute an endorsement.
-* mechanism: the [[ref: coordinator]] initiates the dossier and distributes the candidate acdc. participants signify their agreement by anchoring a seal to the dossier said in their individual kels. the dossier uses the MGRP operator to define the conditions for validity, such as a specific count of unique endorsements.
-* verification: a verifier confirms the dossier is valid by observing that the required number of individual kels contain the necessary seals. the [[ref: coordinator]] may choose to finalize the dossier once the target count is reached to simplify this check for third parties.
+* **Goal:** Collect a threshold of endorsements from a distributed and potentially dynamic set of signers.
+* **Key Concept: Asynchronous Threshold Satisfaction.** Unlike a standard multisig group that requires tight coordination among a fixed set of peers, this pattern allows any AID that satisfies the criteria defined in the dossier schema to contribute an endorsement.
+* **Mechanism:** The [[ref: coordinator]] initiates the dossier and distributes the candidate ACDC. Participants signify their agreement by anchoring a seal to the dossier SAID in their individual KELs. The dossier uses the `M` operator (optionally combined with `Q`) to define the conditions for validity, such as a specific count of qualified, unique endorsements.
+* **Verification:** A verifier confirms the dossier is valid by observing that the required number of individual KELs contain the necessary seals. The [[ref: coordinator]] MAY choose to finalize the dossier once the target count is reached, simplifying this check for third parties.
 
 [//]: # (\newpage)
 
