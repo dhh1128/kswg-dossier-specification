@@ -70,7 +70,7 @@ This pattern is exemplified by the sample dossier in the VVP specification.
 
 ### Referencing Non-ACDC Evidence
 
-To support broad interoperability, this specification provides mechanisms for incorporating evidence from other verifiable data ecosystems, such as W3C Verifiable Credentials or ISO mDLs.
+To support broad interoperability, this specification provides mechanisms for incorporating evidence from other verifiable data ecosystems, such as W3C Verifiable Credentials [[8]] or ISO mDLs [[9]].
 
 #### Direct Reference by Signature (Discouraged)
 
@@ -364,3 +364,9 @@ This profile demonstrates the **Open-Endorsement Dossier** pattern, designed for
 
 [7]. Fax and Murray
 [7]: Fax, J. A., and Murray, R. M. 2004. Information flow and cooperative control of vehicle formations. IEEE Transactions on Automatic Control 49, 9 (September 2004), 1465–1476. https://doi.org/10.1109/TAC.2004.834433
+
+[8]. W3C Verifiable Credentials Data Model v2.0
+[8]: https://www.w3.org/TR/vc-data-model-2.0/
+
+[9]. ISO/IEC 18013-5:2021, Personal identification — ISO-compliant driving licence — Part 5: Mobile driving licence (mDL) application
+[9]: https://www.iso.org/standard/69084.html

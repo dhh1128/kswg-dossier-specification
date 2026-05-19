@@ -105,8 +105,11 @@ Creation of a flexible collection of robustly linked, formally verifiable eviden
 
 ## Normative references
 
-[a]. IETF RFC-2119 Key words for use in RFCs to Indicate Requirement Levels
+[a]. Bradner, S., "Key words for use in RFCs to Indicate Requirement Levels", BCP 14, RFC 2119, March 1997.
 [a]: https://www.rfc-editor.org/rfc/rfc2119.txt
+
+[a2]. Leiba, B., "Ambiguity of Uppercase vs Lowercase in RFC 2119 Key Words", BCP 14, RFC 8174, May 2017.
+[a2]: https://www.rfc-editor.org/rfc/rfc8174.txt
 
 [b]. Smith, S., Griffin, K., Ed., and Trust Over IP Foundation, "Key Event Receipt Infrastructure (KERI)", January 2024.
 [b]: https://trustoverip.github.io/kswg-keri-specification/
