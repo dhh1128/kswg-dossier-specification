@@ -1,11 +1,18 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "############################################",
+  "$id": "ECqmlipYuqp8LA_7WdZGt_cKP9eK3hXtHRZGNgJ7NKEx",
   "title": "Dossier Base Schema",
   "description": "Base schema defining the canonical structure of a Dossier ACDC. A schema S IS-A dossier iff S's top-level allOf array contains a $ref to this schema's SAID, or recursively to another schema that IS-A dossier. A dossier SHOULD NOT include an issuee; all evidence MUST be carried in e, never in a.",
   "type": "object",
   "additionalProperties": true,
-  "required": ["v", "d", "i", "s", "a", "e"],
+  "required": [
+    "v",
+    "d",
+    "i",
+    "s",
+    "a",
+    "e"
+  ],
   "properties": {
     "v": {
       "type": "string",
@@ -37,11 +44,15 @@
     "a": {
       "description": "Proximate metadata block. Compact form: SAID string. Expanded form: object with metadata about the dossier itself. MUST NOT carry primary evidence.",
       "oneOf": [
-        { "type": "string" },
+        {
+          "type": "string"
+        },
         {
           "type": "object",
           "additionalProperties": true,
-          "required": ["d"],
+          "required": [
+            "d"
+          ],
           "properties": {
             "d": {
               "type": "string",
@@ -76,15 +87,26 @@
             "evt_loc": {
               "description": "Description of where the documented event or subject matter occurred. No single format is mandated; precision varies by domain. Implementers SHOULD follow domain standards (e.g., ISO 6709 for geographic coordinates).",
               "oneOf": [
-                { "type": "string" },
-                { "type": "object" }
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "object"
+                }
               ]
             },
             "jur": {
               "description": "Legal or regulatory jurisdiction within which the dossier's subject matter falls, or under whose authority the evidence was collected. This identifies a legal/regulatory jurisdiction, not a geographic location. Expressed as an ISO 3166-1 alpha-2 country code, optionally extended with an ISO 3166-2 region code (e.g., 'US-TX', 'FR', 'CA-ON'). MAY be an array when multiple jurisdictions apply.",
               "oneOf": [
-                { "type": "string" },
-                { "type": "array", "items": { "type": "string" } }
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
               ]
             },
             "cls": {
@@ -106,11 +128,15 @@
     "e": {
       "description": "Edges block linking to evidence. Compact form: SAID string. Expanded form: object whose additional properties each describe one edge. Specific edge shapes (n/s pairs for ACDC-native evidence; M/RM/Q/FIN operator groups for joint issuance) are defined by derived schemas.",
       "oneOf": [
-        { "type": "string" },
+        {
+          "type": "string"
+        },
         {
           "type": "object",
           "additionalProperties": true,
-          "required": ["d"],
+          "required": [
+            "d"
+          ],
           "properties": {
             "d": {
               "type": "string",

@@ -34,7 +34,7 @@ A compliant schema for a dossier:
         "allOf": [
             { 
                 "description": "reference to dossier base schema",
-                "$ref": "EBLnGaNHgEnOvMDqnQO8lpzPQqfZRxC_Rdoinii5buGz"
+                "$ref": "ECqmlipYuqp8LA_7WdZGt_cKP9eK3hXtHRZGNgJ7NKEx"
             },
             {
                 "type": "object",
@@ -259,7 +259,7 @@ The following fields are defined for use in the `a` section of a dossier. All ar
 optional unless a governing schema requires otherwise. Implementers MAY define
 additional fields appropriate to their domain.
 
-- **`assembled`**: An ISO 8601 timestamp recording when the dossier was assembled.
+- **`assembly_dt`**: An ISO 8601 timestamp recording when the dossier was assembled.
   This is distinct from the issuance date recorded in the ACDC envelope, which may
   differ if the dossier was finalized and signed at a later time.
 
@@ -277,32 +277,33 @@ additional fields appropriate to their domain.
   or transaction ID, that links the dossier to a record in an external system. This
   field is intentionally untyped; its meaning is determined by the governance context.
 
-- **`governance`**: A SAID or URI referencing the governance framework, policy
+- **`gov`**: A SAID or URI referencing the governance framework, policy
   document, or rulebook under which the dossier was assembled. This allows verifiers
   to evaluate not just the cryptographic integrity of the dossier but the procedural
   legitimacy of its curation.
   
-- **`incident_dt`**: An ISO 8601 timestamp of the event or incident that the
-  dossier documents — for example, the time of a crash, crime, or filing. This
-  is distinct from `assembled`, which records when the evidence collection was
+- **`evt_dt`**: An ISO 8601 timestamp of the event that the dossier documents
+  — for example, the time of a crash, crime, filing, or transaction. This is
+  distinct from `assembly_dt`, which records when the evidence collection was
   curated. In many cases these will differ significantly: an NTSB investigation
   may be assembled months after the accident it documents.
 
-- **`incident_location`**: A human-readable or structured description of where
-  the incident or subject matter occurred. No single location format is mandated,
+- **`evt_loc`**: A human-readable or structured description of where
+  the event or subject matter occurred. No single location format is mandated,
   as appropriate precision varies widely by domain: a GPS coordinate pair is
   suitable for a crash site, while a court venue is better expressed as a name
   and jurisdiction code. Implementers operating in domains with established
   location standards SHOULD follow those standards (e.g., ISO 6709 for
   geographic coordinates).
 
-- **`jurisdiction`**: The legal or regulatory jurisdiction within which the
+- **`jur`**: The legal or regulatory jurisdiction within which the
   dossier's subject matter falls, or under whose authority the evidence was
-  collected. Expressed as an ISO 3166-1 alpha-2 country code, optionally
+  collected. This identifies a legal/regulatory jurisdiction, not a geographic
+  location. Expressed as an ISO 3166-1 alpha-2 country code, optionally
   extended with an ISO 3166-2 region or province code (e.g., `US-TX`, `FR`,
   `CA-ON`). Where multiple jurisdictions apply, this field MAY be an array.
 
-- **`classification`**: A string identifying the type or category of matter
+- **`cls`**: A string identifying the type or category of matter
   the dossier documents. The value space is domain-dependent: a law enforcement
   dossier might use a statute reference or offense code; an NTSB dossier might
   use an event type from the NTSB taxonomy; a court dossier might use a case
@@ -318,13 +319,13 @@ additional fields appropriate to their domain.
   When a dossier transitions between phases, a new version SHOULD be issued
   rather than the existing dossier modified in place.
 
-- **`governing_rules`**: A SAID or URI identifying a specific protocol,
+- **`gov_rules`**: A SAID or URI identifying a specific protocol,
   standard, or ruleset that governed the collection of evidence in this dossier
   — for example, a forensic collection protocol, the Federal Rules of Evidence,
-  or NTSB investigation procedures. This field is more specific than `governance`,
+  or NTSB investigation procedures. This field is more specific than `gov`,
   which identifies the framework under which the dossier itself was assembled.
-  Both fields MAY be present simultaneously: `governance` describes who is
-  overseeing the dossier, while `governing_rules` describes what procedural
+  Both fields MAY be present simultaneously: `gov` describes who is
+  overseeing the dossier, while `gov_rules` describes what procedural
   constraints applied to the underlying investigation.
   
 ## Joint issuance
