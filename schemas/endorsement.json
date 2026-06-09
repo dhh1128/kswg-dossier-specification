@@ -1,8 +1,8 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "EII_Jsw8oKU8g9BKI8szStZQSXFtkudNiNbYdP4Ajsq4",
+  "$id": "EAfn0gRMUnp6d1hyE5qJCN86kBFBp80JwMdm0BqiC1B0",
   "title": "Endorsement",
-  "description": "Generic endorsement ACDC used by the joint-issuance threshold operators (MxN, RMxN, MxQ, RMxQ). An endorsement asserts that its issuer (i) endorses the subject identified by 'said' for the act named in 'act'. A signed instance is an authenticated endorsement that counts toward a threshold. An unsigned instance is only a placeholder that reserves a slot for a named candidate endorser and does not count.",
+  "description": "Endorsement ACDC used by the joint-issuance threshold operators (MxN, RMxN, MxQ, RMxQ). Its issuer (i) records a disposition (disp) toward the subject identified by 'said' for the act named in 'act'. A signed instance with disp 'endorse' is an authenticated endorsement that counts toward a threshold; a signed instance with disp 'decline' is an authenticated declination that records attributable dissent and never counts. An unsigned instance is only a placeholder reserving a slot for a named candidate; its field values are not authoritative until signed. For the qualified operators (MxQ, RMxQ) the endorser additionally supplies a qualification-proof edge (e.qp), and the operator's 'qs' field names the schema that proof must satisfy; for the unqualified operators (MxN, RMxN) the edges block is omitted.",
   "type": "object",
   "additionalProperties": true,
   "required": [
@@ -23,7 +23,7 @@
     },
     "i": {
       "type": "string",
-      "description": "AID of the endorser. In an unsigned placeholder it names the candidate from whom an endorsement is expected; in a signed instance it is the authenticated endorser."
+      "description": "AID of the endorser. In an unsigned placeholder it names the candidate from whom a disposition is expected; in a signed instance it is the authenticated endorser."
     },
     "s": {
       "type": "string",
@@ -34,7 +34,7 @@
       "description": "Optional salt for SAID blinding."
     },
     "a": {
-      "description": "Attributes block. Compact form: SAID string. Expanded form: object naming the endorsed subject and the act endorsed.",
+      "description": "Attributes block. Compact form: SAID string. Expanded form: object naming the endorsed subject, the act, and the disposition.",
       "oneOf": [
         {
           "type": "string"
@@ -45,7 +45,8 @@
           "required": [
             "d",
             "said",
-            "act"
+            "act",
+            "disp"
           ],
           "properties": {
             "d": {
@@ -62,7 +63,60 @@
                 "issue",
                 "revoke"
               ],
-              "description": "The act being endorsed. 'issue' contributes to an MxN or MxQ issuance threshold; 'revoke' contributes to an RMxN or RMxQ revocation threshold. Binding the act prevents an issuance endorsement from being replayed as a revocation endorsement, or vice versa."
+              "description": "The act addressed. 'issue' pertains to an MxN or MxQ issuance threshold; 'revoke' pertains to an RMxN or RMxQ revocation threshold. Binding the act prevents a disposition toward issuance from being replayed as one toward revocation, or vice versa."
+            },
+            "disp": {
+              "type": "string",
+              "enum": [
+                "endorse",
+                "decline"
+              ],
+              "description": "The endorser's disposition. 'endorse' is an approval that, when signed, counts toward the operator's threshold. 'decline' is an authenticated refusal that records attributable dissent and never counts."
+            },
+            "reason": {
+              "type": "string",
+              "description": "Optional human-readable explanation, most useful with disp 'decline'."
+            }
+          }
+        }
+      ]
+    },
+    "e": {
+      "description": "Optional edges block. Present for qualified dispositions (MxQ, RMxQ) to carry the qualification-proof edge; omitted for unqualified dispositions (MxN, RMxN). Compact form: SAID string. Expanded form: object with a qp edge.",
+      "oneOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "object",
+          "additionalProperties": true,
+          "required": [
+            "d",
+            "qp"
+          ],
+          "properties": {
+            "d": {
+              "type": "string",
+              "description": "SAID of this edges block."
+            },
+            "qp": {
+              "description": "Qualification-proof edge. References an ACDC that proves the endorser is qualified to act on the subject. The referenced ACDC MUST validate against the schema named in the operator's 'qs' field.",
+              "type": "object",
+              "additionalProperties": true,
+              "required": [
+                "n",
+                "s"
+              ],
+              "properties": {
+                "n": {
+                  "type": "string",
+                  "description": "SAID of the qualification-proof ACDC."
+                },
+                "s": {
+                  "type": "string",
+                  "description": "SAID of the schema the qualification-proof ACDC MUST validate against; matches the operator's 'qs'."
+                }
+              }
             }
           }
         }
