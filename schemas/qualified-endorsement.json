@@ -1,0 +1,61 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "EMBmEPewc1XpzWktdrzsTh7DidJc0c0o3H0wVkOYLn5F",
+  "title": "Qualified Endorsement",
+  "description": "Qualified endorsement ACDC used by the MxQ and RMxQ operators. Extends the generic Endorsement schema with a qualification-proof edge (e.qp) that links to an ACDC demonstrating the endorser's qualification to endorse. The dossier creator constrains the acceptable proof schema via the operator's 'qs' field, so the proof can differ per use case.",
+  "allOf": [
+    {
+      "description": "reference to the generic Endorsement schema",
+      "$ref": "EII_Jsw8oKU8g9BKI8szStZQSXFtkudNiNbYdP4Ajsq4"
+    },
+    {
+      "type": "object",
+      "required": [
+        "e"
+      ],
+      "properties": {
+        "e": {
+          "description": "Edges block. Compact form: SAID string. Expanded form: object carrying the qualification-proof edge.",
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "object",
+              "additionalProperties": true,
+              "required": [
+                "d",
+                "qp"
+              ],
+              "properties": {
+                "d": {
+                  "type": "string",
+                  "description": "SAID of this edges block."
+                },
+                "qp": {
+                  "description": "Qualification-proof edge. References an ACDC that proves the endorser is qualified to endorse the subject. The referenced ACDC MUST validate against the schema named in the operator's 'qs' field.",
+                  "type": "object",
+                  "additionalProperties": true,
+                  "required": [
+                    "n",
+                    "s"
+                  ],
+                  "properties": {
+                    "n": {
+                      "type": "string",
+                      "description": "SAID of the qualification-proof ACDC."
+                    },
+                    "s": {
+                      "type": "string",
+                      "description": "SAID of the schema the qualification-proof ACDC MUST validate against; matches the operator's 'qs'."
+                    }
+                  }
+                }
+              }
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,76 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "EPDmxkDxXkVNXAdj773O9AcmmXWGwl2ST2rswPFmo5sH",
+  "title": "Declination",
+  "description": "Declination ACDC used by the joint-issuance threshold operators. A signed declination asserts that its issuer (i) declines to endorse the subject identified by 'said' for the act named in 'act'. It records authenticated, attributable dissent. A declination never counts toward a threshold; its presence (as opposed to a pending placeholder) distinguishes a candidate who was asked and refused from one who has not yet acted.",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "v",
+    "d",
+    "i",
+    "s",
+    "a"
+  ],
+  "properties": {
+    "v": {
+      "type": "string",
+      "description": "CESR version string."
+    },
+    "d": {
+      "type": "string",
+      "description": "SAID of this declination ACDC."
+    },
+    "i": {
+      "type": "string",
+      "description": "AID of the declining endorser."
+    },
+    "s": {
+      "type": "string",
+      "description": "SAID of the schema applied to this ACDC."
+    },
+    "u": {
+      "type": "string",
+      "description": "Optional salt for SAID blinding."
+    },
+    "a": {
+      "description": "Attributes block. Compact form: SAID string. Expanded form: object naming the subject declined and the act declined.",
+      "oneOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "object",
+          "additionalProperties": true,
+          "required": [
+            "d",
+            "said",
+            "act"
+          ],
+          "properties": {
+            "d": {
+              "type": "string",
+              "description": "SAID of this attributes block."
+            },
+            "said": {
+              "type": "string",
+              "description": "SAID of the subject the issuer declines to endorse, typically the dossier ACDC."
+            },
+            "act": {
+              "type": "string",
+              "enum": [
+                "issue",
+                "revoke"
+              ],
+              "description": "The act being declined, mirroring the Endorsement schema: 'issue' for an MxN or MxQ issuance, 'revoke' for an RMxN or RMxQ revocation."
+            },
+            "reason": {
+              "type": "string",
+              "description": "Optional human-readable explanation for the declination."
+            }
+          }
+        }
+      ]
+    }
+  }
+}
