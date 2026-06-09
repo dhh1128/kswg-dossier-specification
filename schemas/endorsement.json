@@ -1,0 +1,72 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "EII_Jsw8oKU8g9BKI8szStZQSXFtkudNiNbYdP4Ajsq4",
+  "title": "Endorsement",
+  "description": "Generic endorsement ACDC used by the joint-issuance threshold operators (MxN, RMxN, MxQ, RMxQ). An endorsement asserts that its issuer (i) endorses the subject identified by 'said' for the act named in 'act'. A signed instance is an authenticated endorsement that counts toward a threshold. An unsigned instance is only a placeholder that reserves a slot for a named candidate endorser and does not count.",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "v",
+    "d",
+    "i",
+    "s",
+    "a"
+  ],
+  "properties": {
+    "v": {
+      "type": "string",
+      "description": "CESR version string."
+    },
+    "d": {
+      "type": "string",
+      "description": "SAID of this endorsement ACDC."
+    },
+    "i": {
+      "type": "string",
+      "description": "AID of the endorser. In an unsigned placeholder it names the candidate from whom an endorsement is expected; in a signed instance it is the authenticated endorser."
+    },
+    "s": {
+      "type": "string",
+      "description": "SAID of the schema applied to this ACDC."
+    },
+    "u": {
+      "type": "string",
+      "description": "Optional salt for SAID blinding."
+    },
+    "a": {
+      "description": "Attributes block. Compact form: SAID string. Expanded form: object naming the endorsed subject and the act endorsed.",
+      "oneOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "object",
+          "additionalProperties": true,
+          "required": [
+            "d",
+            "said",
+            "act"
+          ],
+          "properties": {
+            "d": {
+              "type": "string",
+              "description": "SAID of this attributes block."
+            },
+            "said": {
+              "type": "string",
+              "description": "SAID of the subject being endorsed, typically the dossier ACDC whose joint issuance this endorsement contributes to."
+            },
+            "act": {
+              "type": "string",
+              "enum": [
+                "issue",
+                "revoke"
+              ],
+              "description": "The act being endorsed. 'issue' contributes to an MxN or MxQ issuance threshold; 'revoke' contributes to an RMxN or RMxQ revocation threshold. Binding the act prevents an issuance endorsement from being replayed as a revocation endorsement, or vice versa."
+            }
+          }
+        }
+      ]
+    }
+  }
+}
