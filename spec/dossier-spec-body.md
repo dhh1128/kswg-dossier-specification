@@ -34,7 +34,7 @@ A compliant schema for a dossier:
         "allOf": [
             { 
                 "description": "reference to dossier base schema",
-                "$ref": "ECqmlipYuqp8LA_7WdZGt_cKP9eK3hXtHRZGNgJ7NKEx"
+                "$ref": "ECpZgR2Ybj2QCfFZrnNQUqhbLnZuMl5cjL2MtgDaxMbY"
             },
             {
                 "type": "object",
@@ -218,11 +218,11 @@ The verification process for a dossier requires a citation and a referenceTime a
 
 2. Validate dossier integrity: calculate the SAID of the retrieved data and ensure it matches the expected SAID from the citation.
 
-3. Determine issuance model: inspect the edges block for the FIN [[ref: operator]] or m-ary M operator.
+3. Determine issuance model: inspect the attributes block for an `fi` [[ref: finalization-identifier, finalization identifier]] and the edges block for a joint-issuance [[ref: threshold-operator, threshold operator]] (`MxN`, `RMxN`, `MxQ`, or `RMxQ`) in an edge group's `o` field.
 
 4. Validate signatures and anchors:
-   a. If the FIN operator is present, locate the finalization event in the primary KEL. Verify that the event contains the required threshold-satisfying signatures or seals.
-   b. If the FIN operator is absent but an M operator is present, identify the member AIDs defined in the threshold group. Fetch the individual KEL for each member and verify that a valid seal to the dossier SAID exists in each KEL. Confirm that the total weight of verified members meets the threshold defined in the M operator.
+   a. If `fi` is present and non-null, locate the finalization event in the KEL of the AID it names. Verify that the event carries the threshold-satisfying endorsements for the relevant operator.
+   b. If `fi` is absent or null but a threshold operator is present, evaluate each slot in the operator's edge group. A slot counts only when it references a signed Endorsement ACDC — matching the operator's required schema, with `act` appropriate to the operation, issued by the expected endorser and anchored in that endorser's KEL. Confirm that the number of Endorsed slots meets the operator's threshold (`m` for `MxN`/`MxQ`, `rm` for `RMxN`/`RMxQ`). For the qualified operators, additionally verify that each counted endorsement carries a qualification proof (`e.qp`) that validates against the schema named in the operator's `qs` field.
    c. For standard dossiers with a single issuer, retrieve the issuer KEL and verify the signature against the public keys authoritative at the referenceTime.
 
 5. Recursive graph traversal: for each named edge in the edges block, fetch the referenced artifact and perform this validation algorithm recursively.
@@ -350,30 +350,38 @@ When joint issuance is coordinated with a leader-follower strategy, three distin
 * Finalizer: any entity that, upon observing that an issuance threshold is met, submits a finalization event to a KEL.
 
 ### Threshold mechanics
-A joint issuance MUST satisfy an m-ary threshold operator defined in the edge section of the dossier ACDC. A schema MAY define the required threshold and the set of possible signers. Alternatively, a schema MAY defer these definitions to the dossier instance, allowing the threshold rules to be actualized only when the issuance is proposed.
+A joint issuance is satisfied by an m-ary [[ref: threshold-operator, threshold operator]] placed in the operator field (`o`) of an edge group within the dossier's edges block, following ACDC operator conventions. The operator's member edges are *slots*, and the group is satisfied when enough slots carry valid endorsements to meet a numeric threshold. A schema MAY fix the operator, the threshold, and the set of candidate endorsers, or MAY defer some or all of these to the dossier instance, so the rules are actualized only when the issuance is proposed.
 
-### New operators for joint issuance
-The following operators are defined to support the logic of joint issuance within the edges block:
+#### Slot dispositions
+Within a threshold operator's edge group, each member edge is a slot that points (via its `n` field) to an endorsement ACDC and names the schema that endorsement MUST satisfy (via its `s` field). The expected endorser is identified by the issuer (`i`) of the ACDC the slot references. A slot is in exactly one of three dispositions:
 
-* `M`: a [[ref: threshold operator]] that declares that issuance is accomplished by satisfying an endorser count. This number MUST be expressed via a corresponding field on the edge, `m`. The presence of this operator triggers a requirement that the set of corresponding signers MUST be represented in the edges of the edge group to which the operator is attached. The `M` operator also allows valid *potential* signers (as opposed to *actual* signers in the edge) to be enumerated in advance. When they are, the enumeration MUST occur in the attributes (root `a` object) section of the ACDC, and MUST consist of an array of AIDs. If a field named `mgrp` appears as a property on the same edge as `M`, it MUST name the field in the attributes section where this enumeration occurs. If `mgrp` does not appear as a property on `M`'s edge group, then the enumeration of potential signers MUST be given in a field named `mgrp` in the attributes section. The `M` operator with enumerated potential signers thus embodies an *m of n* approval pattern: `m` supplies the threshold, and the cardinality of potential signers enumerated in `mgrp` provides the logical upper bound *n*. An example is a judicial decision jointly issued by *m* of *n* justices, where the AIDs of the judges are enumerated and *m* constitutes a majority. An `M` operator that does not enumerate valid potential signers MAY instead be combined with the `Q` operator to model an unbounded number of potential signers who must still be qualified in some way; see below.
-* `RM`: a [[ref: revocation operator]] that declares that revocation is accomplished by satisfying a revoker count. `RM` has parallel semantics to `M`, but its corresponding numeric field on the edge is `rm`, and its potential revokers are enumerated in an `rmgrp` field in the attributes section, or in an attribute field with the name specified in the `rmgrp` field on the edge. This flexibility allows the set of revokers to be identical to the set of endorsers used for `M`, to overlap that set, or to be entirely disjoint, and allows the threshold for revocation to differ from the threshold for issuance.
-* `Q`: A qualification operator that determines a standard of proof that signers MUST meet. When this operator is present, the edge MUST also contain a `qschema` property that describes the proof that must exist, plus a `qev` array that enumerates edges of evidence presented by each signer as proof of qualification.
-* `FIN`: a [[ref: finalization operator]] that signals whether a verifier should expect a finalization event in a KEL. Recording a finalization event in the KEL allows verifiers to predict where aggregate evidence may be collected for easy review. Without it, a verifier must collect evidence of joint issuance signatures from disparate locations.
+* **Pending**: the slot references an unsigned meta ACDC that names the candidate endorser but carries no signature (or the slot is null). This is the initial state the dossier creator establishes for each candidate. A pending slot does not count toward the threshold; it records only that an endorsement is anticipated from the named candidate.
+* **Endorsed**: the slot references a signed [[ref: endorsement]] ACDC issued by the candidate, whose `said` attribute equals the dossier's SAID. This is an authenticated act and counts toward the threshold.
+* **Declined**: the slot references a signed [[ref: declination]] ACDC issued by the candidate. This is an authenticated refusal. It does not count toward the threshold, but, unlike a pending slot, it records attributable dissent — distinguishing a candidate who was asked and refused from one who has not yet acted.
+
+Because only a signature authenticates a candidate's decision, a pending slot and an absent slot are equivalent in trust terms: neither attributes any act to the candidate. An active "no" MUST therefore be expressed as a signed declination, never as a null or unsigned slot.
+
+### Threshold operators
+The following m-ary operators are defined for the `o` field of an edge group to support joint issuance. Each carries an integer threshold field giving the number of endorsements that satisfies it.
+
+* `MxN` ("M of N"): an issuance [[ref: threshold-operator, threshold operator]]. The edge group contains exactly *N* slots, one per candidate endorser, and is satisfied when at least *m* of them are **Endorsed**. The threshold MUST be expressed in an `m` field on the edge group. Each slot's endorsement MUST validate against the generic Endorsement schema (SAID `EII_Jsw8oKU8g9BKI8szStZQSXFtkudNiNbYdP4Ajsq4`) with its `act` equal to `"issue"`. Because the *N* candidates are enumerated structurally as slots — each naming its expected endorser through the issuer of the ACDC it references — the operator embodies an *m of n* pattern without any separate enumeration of potential signers. An example is a judicial decision jointly issued by *m* of *n* named justices.
+* `RMxN` ("Revocation M of N"): a [[ref: revocation-operator, revocation operator]] with the same mechanics as `MxN`, applied to revocation. Its threshold field is `rm`, and each slot's endorsement MUST carry `act` equal to `"revoke"`. The set of revocation slots MAY be identical to, overlap, or be disjoint from the issuance slots, and `rm` MAY differ from `m`, so the authority to revoke can be configured independently of the authority to issue.
+* `MxQ` ("M of Qualified"): an issuance threshold operator for an open-ended set of qualified endorsers. Unlike `MxN`, the slot count is not fixed in advance; slots are added as qualified endorsers act, and the group is satisfied when at least *m* slots are **Endorsed**. The threshold MUST be expressed in an `m` field. Each endorsement MUST validate against the Qualified Endorsement schema (SAID `EMBmEPewc1XpzWktdrzsTh7DidJc0c0o3H0wVkOYLn5F`), which extends the Endorsement schema with a qualification-proof edge (`e.qp`). The edge group MUST also carry a `qs` field naming the SAID of the schema that each endorser's qualification proof MUST satisfy; the dossier creator chooses this proof schema to suit the use case, since the proof of qualification differs from one context to another. This models an endorsement open to anyone who can prove they are qualified — for example, "any licensed physician in good standing."
+* `RMxQ` ("Revocation M of Qualified"): a revocation threshold operator with the same mechanics as `MxQ`, applied to revocation. Its threshold field is `rm`, and each endorsement MUST carry `act` equal to `"revoke"`. As with `RMxN`, the qualified revoker set and threshold MAY be configured independently of issuance.
+
+A **Declined** disposition under any of these operators is expressed with a signed Declination ACDC (SAID `EPDmxkDxXkVNXAdj773O9AcmmXWGwl2ST2rswPFmo5sH`) carrying the matching `act`. For the qualified operators, whether a declination must also carry a qualification proof is a policy choice left to the governing schema; a declination never counts toward the threshold in any case.
 
 ### Finalization
-A [[ref: coordinator]] MAY choose to finalize a joint issuance to assist verifiers that do not perform recursive graph traversal.
+A joint issuance MAY advertise a finalization event to assist verifiers that do not perform recursive graph traversal. This is signaled by the `fi` ("finalization identifier") field in the dossier's attributes (`a`) section, rather than by an edge operator.
 
-1. Satisfaction: a [[ref: finalizer]] observes that a sufficient number of signatures or seals have been gathered to meet the threshold.
-2. Allocation: the [[ref: finalizer]] allocates the next sequence number in the relevant KEL, which is typically a group AID.
-3. Anchoring: the [[ref: finalizer]] attaches the threshold-satisfying proofs to a KEL event and submits it for witnessing.
-
-If a finalization event is present, a verifier SHOULD use it as the definitive proof of issuance. If absent, a verifier MUST poll the individual KELs of all possible participants to determine whether the threshold has been met.
+* When `fi` is present and non-null, it holds the AID whose KEL is expected to carry a finalization event for this joint issuance. A [[ref: finalizer]] that observes the threshold to be met anchors the threshold-satisfying proofs in that AID's KEL — typically a group AID — so that the aggregate evidence is collected in one predictable place. A verifier SHOULD use this finalization event as the definitive proof of issuance.
+* When `fi` is absent or null, no finalization event is promised. A verifier MUST instead gather the endorsements from the participants' individual KELs and confirm directly that the threshold is met.
 
 ### Revocation
-Revocation logic in a joint issuance may be defined independently of issuance logic.
+Revocation logic in a joint issuance is defined independently of issuance logic, using the `RMxN` or `RMxQ` operator.
 
-* Default: if no separate revocation rule is defined, the threshold required to revoke a dossier is identical to the threshold required to issue it.
-* Asymmetric thresholds: a dossier may specify different operators for creation and revocation. For example, a dossier may require a majority for issuance but allow a single administrative AID to perform a revocation.
+* Default: if no revocation operator is present, the threshold required to revoke a dossier is identical to the threshold required to issue it.
+* Asymmetric thresholds: a dossier MAY specify different operators, slot sets, or thresholds for issuance and revocation. For example, a dossier may require a majority for issuance but allow a single administrative AID to perform a revocation.
 
 ## Dossiers and Derivative References
 
@@ -526,8 +534,8 @@ This profile demonstrates the **Open-Endorsement Dossier** pattern, designed for
 
 - **Goal:** Collect a threshold of endorsements from a distributed and potentially dynamic set of signers.
 - **Key Concept: Asynchronous Threshold Satisfaction.** Unlike a standard multisig group that requires tight coordination among a fixed set of peers, this pattern allows any AID that satisfies the criteria defined in the dossier schema to contribute an endorsement.
-- **Mechanism:** The coordinator initiates the dossier and distributes the candidate ACDC. Participants signify their agreement by anchoring a seal to the dossier SAID in their individual KELs. The dossier uses the `M` operator (optionally combined with `Q`) to define the conditions for validity, such as a specific count of qualified, unique endorsements.
-- **Verification:** A verifier confirms the dossier is valid by observing that the required number of individual KELs contain the necessary seals. The coordinator may choose to finalize the dossier once the target count is reached, simplifying this check for third parties.
+- **Mechanism:** The coordinator initiates the dossier and distributes the candidate ACDC. Because the qualified signer set is open-ended, the dossier uses the `MxQ` operator to define the conditions for validity: a threshold `m` of qualified, unique endorsements, where each endorser proves qualification through the proof schema named in the operator's `qs` field. Participants signify their agreement by issuing a qualified Endorsement ACDC and anchoring it in their individual KELs.
+- **Verification:** A verifier confirms the dossier is valid by observing that at least `m` qualified endorsers' KELs carry a valid endorsement of the dossier SAID. The coordinator may set the dossier's `fi` field and finalize the issuance once the target count is reached, simplifying this check for third parties.
 
 [//]: # (\newpage)
 

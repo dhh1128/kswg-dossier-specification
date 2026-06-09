@@ -1,3 +1,0 @@
-[[def: finalization-operator, finalization operator]]
-
-~ An operator, `fin`, that signals the intended presence of a finalization event in a key event log, serving as a hint to verifiers regarding the proof structure.

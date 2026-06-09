@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "ECqmlipYuqp8LA_7WdZGt_cKP9eK3hXtHRZGNgJ7NKEx",
+  "$id": "ECpZgR2Ybj2QCfFZrnNQUqhbLnZuMl5cjL2MtgDaxMbY",
   "title": "Dossier Base Schema",
   "description": "Base schema defining the canonical structure of a Dossier ACDC. A schema S IS-A dossier iff S's top-level allOf array contains a $ref to this schema's SAID, or recursively to another schema that IS-A dossier. A dossier SHOULD NOT include an issuee; all evidence MUST be carried in e, never in a.",
   "type": "object",
@@ -120,13 +120,17 @@
             "gov_rules": {
               "type": "string",
               "description": "SAID or URI of the specific protocol, standard, or ruleset that governed the collection of evidence (e.g., a forensic collection protocol, the Federal Rules of Evidence, or NTSB investigation procedures). More specific than gov: gov names the framework overseeing the dossier; gov_rules names the procedural constraints on the underlying investigation."
+            },
+            "fi": {
+              "type": "string",
+              "description": "Finalization identifier. Optional AID used in joint issuance. When present and non-null, it tells a verifier to expect a finalization event for this dossier's joint issuance in the KEL of the named AID, which collects threshold-satisfying proofs in one place. When absent or null, no finalization event is promised and a verifier must gather endorsements from the participants' individual KELs."
             }
           }
         }
       ]
     },
     "e": {
-      "description": "Edges block linking to evidence. Compact form: SAID string. Expanded form: object whose additional properties each describe one edge. Specific edge shapes (n/s pairs for ACDC-native evidence; M/RM/Q/FIN operator groups for joint issuance) are defined by derived schemas.",
+      "description": "Edges block linking to evidence. Compact form: SAID string. Expanded form: object whose additional properties each describe one edge. Specific edge shapes (n/s pairs for ACDC-native evidence; MxN/RMxN/MxQ/RMxQ operator groups for joint issuance) are defined by derived schemas.",
       "oneOf": [
         {
           "type": "string"
