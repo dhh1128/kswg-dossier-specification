@@ -102,7 +102,7 @@ The solution is to give the artifact a cryptographic identity using one of the
 algorithms defined in the *Bytewise and Externalized SAIDs* specification [[8]],
 and then issue a [[ref: foreign-artifact-wrapper, Foreign Artifact ACDC]] that attests to the [[ref: foreign-artifact, artifact]]'s identity
 and provenance. The resulting wrapper is a standard ACDC and can be linked into
-a dossier edge like any other evidentum.
+a dossier edge like any other [[ref: evidentum]].
 
 Two algorithms are defined in [[8]] for saidifying opaque artifacts:
 
@@ -191,7 +191,7 @@ The normative steps for dossier curation are as follows:
 
 For dossiers used in procedural contexts (e.g., legal proceedings, insurance adjustments), the mere existence of evidence is insufficient; its status relative to the procedure matters. An artifact may be "marked for identification," "admitted," "objected to," or "stricken." Because ACDCs are immutable, an issuer cannot simply modify the metadata of an existing [[ref: edge]].
 
-To manage these state transitions, dossiers MUST use **Annotation Edges**. An annotation edge is an edge in a new version of the dossier that points to an artifact (or an edge) in a previous version. The payload of the annotation edge carries the new state or ruling. For example, a "Court Case Dossier v2" might contain an edge labeled `ruling_101` that points to the SAID of `exhibit_A` (from v1) with the attribute `status: "admitted"`. Verifiers MUST process the dossier by traversing the graph to resolve the "effective state" of each piece of evidence, applying the latest annotations found in the chain.
+To manage these state transitions, dossiers MUST use **[[ref: annotation-edge, Annotation Edges]]**. An annotation edge is an edge in a new version of the dossier that points to an artifact (or an edge) in a previous version. The payload of the annotation edge carries the new state or ruling. For example, a "Court Case Dossier v2" might contain an edge labeled `ruling_101` that points to the SAID of `exhibit_A` (from v1) with the attribute `status: "admitted"`. Verifiers MUST process the dossier by traversing the graph to resolve the "effective state" of each piece of evidence, applying the latest annotations found in the chain.
 
 ### Temporal Pinning
 
@@ -528,7 +528,7 @@ This profile introduces the **Predicate Dossier** pattern, essential for environ
 
 * **Goal:** Prove eligibility or compliance without disclosing the underlying sensitive data.
 * **Key Concept: Zero-Knowledge Predicates.**
-* **Mechanism:** Instead of linking to a raw evidence file (e.g., `blood_test_results.pdf`), the dossier links to a **Predicate Edge**. This edge points to a Zero-Knowledge Proof (ZKP) or a derived cryptographic claim generated from the raw data.
+* **Mechanism:** Instead of linking to a raw evidence file (e.g., `blood_test_results.pdf`), the dossier links to a **[[ref: predicate-edge, Predicate Edge]]**. This edge points to a Zero-Knowledge Proof (ZKP) or a derived cryptographic claim generated from the raw data.
     * *Example:* The dossier asserts `inclusion_criteria_met: true`. The evidence is a ZKP proving that "Subject Age > 18 AND HIV_Status == Positive" without revealing the subject's birthdate or specific medical markers.
 * **Verification:** The verifier validates the cryptographic proof rather than parsing the document, enabling high-assurance compliance without data leakage.
 
