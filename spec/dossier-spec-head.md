@@ -129,7 +129,7 @@ The following are in scope: normative requirements for dossier structure and sch
 
 The following are explicitly out of scope: transport or citation protocols for presenting dossiers at transaction time; storage and hosting requirements for dossier artifacts; the internal data formats of evidence items referenced by a dossier; and the KERI, ACDC, and CESR specifications on which this document depends.
 
-## Normative references
+## Normative References
 
 [a]. IETF RFC-2119 Key words for use in RFCs to Indicate Requirement Levels
 [a]: https://www.rfc-editor.org/rfc/rfc2119.txt

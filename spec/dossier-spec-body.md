@@ -326,7 +326,7 @@ additional fields appropriate to their domain.
   overseeing the dossier, while `gov_rules` describes what procedural
   constraints applied to the underlying investigation.
   
-## Joint issuance
+## Joint Issuance
 A dossier may be assembled and signed by a single party. For example, an artist who wishes to collect cryptographic evidence of their creations may do so as a solo activity. However, many dossiers snapshot evidence contributions from multiple parties, and so represent a group work product that needs an aggregate approval mechanism. In such cases, signing the ACDC that references all the individual pieces of evidence is managed with joint issuance.
 
 ### Logic
@@ -340,14 +340,14 @@ A dossier can be approved using any of these variants, and this specification no
 
 The validity of a jointly issued dossier is determined by satisfying a [[ref: threshold-operator, threshold operator]] within its [[ref: edge]] graph. Because the logic is decoupled from key management, issuance and verification have more flexibility.
 
-### Leader-follower roles
+### Leader-Follower Roles
 When joint issuance is coordinated with a leader-follower strategy, three distinct roles emerge, that may be performed by the same or different entities:
 
 * Collector: the entity that assembles the evidence artifacts and defines the initial dossier structure.
 * Coordinator: the entity that, once collection is finished, initiates the issuance action and distributes the candidate dossier for endorsement.
 * Finalizer: any entity that, upon observing that an issuance threshold is met, submits a finalization event to a KEL.
 
-### Threshold mechanics
+### Threshold Mechanics
 A joint issuance is satisfied by a weighted [[ref: threshold-operator, threshold operator]] placed in the operator field (`o`) of an edge group within the dossier's edges block, following ACDC operator conventions. The operator's member edges are *slots*. Each slot carries a weight in its reserved `w` field, and the group is satisfied when the weights of the slots that hold valid endorsements sum to at least **unity** (1). This is the same fractionally weighted threshold KERI uses for key-event signing thresholds (`kt`): the threshold itself is the fixed constant 1, so there is no separate count field — how many endorsements are enough, and how much each is worth, lives entirely in the weights.
 
 For an ordinary *m*-of-*n* rule among equal endorsers, each of the *n* slots is given weight `1/m`, so that any *m* of them sum to unity while any *m*−1 fall short. Unequal weights express weighted governance (a senior endorser whose approval counts double carries `2/m`), and grouped weights express nested AND/OR-of-threshold rules, exactly as KERI's nested `kt` lists do. A schema MAY fix the operator, the weights, and the set of candidate endorsers, or MAY defer some or all of these to the dossier instance, so the rules are actualized only when the issuance is proposed.
@@ -361,7 +361,7 @@ Within a threshold operator's edge group, each member edge is a slot that points
 
 Because only a signature authenticates a candidate's decision, a pending slot and an absent slot are equivalent in trust terms: neither attributes any act to the candidate. An active "no" MUST therefore be expressed as a signed declination, never as a null or unsigned slot.
 
-### Threshold operators
+### Threshold Operators
 The following operators are defined for the `o` field of an edge group to support joint issuance. Each is satisfied when the weights (`w`) of its **Endorsed** slots sum to at least unity (1).
 
 All four operators use a single [[ref: endorsement]] schema (SAID `EAfn0gRMUnp6d1hyE5qJCN86kBFBp80JwMdm0BqiC1B0`); a slot's `s` field names this one schema throughout. Three fields on the endorsement distinguish the cases: `disp` (`"endorse"` to add the slot's weight, `"decline"` to record dissent), `act` (`"issue"` or `"revoke"`), and the optional qualification-proof edge `e.qp` (present for the qualified operators, omitted otherwise). The operator's own name, together with the `act` of the endorsements it counts, distinguishes issuance from revocation.
@@ -423,7 +423,7 @@ Implementers MAY define additional derivative forms — for example, a summary t
 
 ## Security Considerations
 
-### Integrity and Non-Repudiation Via KERI
+### Integrity and Non-Repudiation via KERI
 
 The security of the dossier model is founded on the cryptographic primitives provided by KERI and ACDC.
 
@@ -443,7 +443,7 @@ The dossier model operates on a decentralized root of trust. A verifier does not
 
 The foundation of this trust is the KERI witness infrastructure. Witnesses are independent services that act as notaries for an AID's KEL. By requiring an issuer to report its key events to a set of witnesses, the system gains high availability and duplicity detection. Verifiers SHOULD consult multiple witnesses to ensure they have a consistent and complete view of an issuer's KEL, thereby protecting against duplicity and compromise.
 
-### Long-term Auditability and Historical Analysis
+### Long-Term Auditability and Historical Analysis
 
 The KERI-based dossier ecosystem supports long-lived auditing. Because KELs provide a complete, verifiable, and sequenced history of an identifier's key state, a verifier can perform validation for any arbitrary point in the past. 
 
