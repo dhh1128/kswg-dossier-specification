@@ -4,9 +4,83 @@
 
 A dossier MUST be a valid Authentic Chained Data Container (ACDC) as defined in the ACDC specification [[2]].
 
+### How a Dossier Is Issued: Anchoring, Not Attached Signatures
+
+Terminology in this area is easy to get wrong, and the wrong reading has real
+consequences for implementers, so this specification states the mechanism once
+here and relies on it throughout.
+
+A dossier is not a signed document. The issuer does not compute a signature
+over the dossier ACDC and attach that signature to it as proof of authenticity,
+which is what "signing a credential" means in most other verifiable credential
+ecosystems. Instead:
+
+1. The assembled dossier ACDC is saidified, yielding its SAID.
+2. The issuer constructs a seal containing that SAID.
+3. The issuer anchors the seal in an append-only verifiable log — either
+   directly in the key event log (KEL) of the issuer's AID, or in a transaction
+   event log (TEL) for the dossier whose own events are in turn anchored in
+   that KEL.
+4. The key event carrying the anchor is signed with the keys authoritative for
+   the issuer's AID at that point in the log.
+
+The signature exists on the anchoring key event, not on the dossier. What binds
+the issuer to the dossier is the anchor: a commitment to the dossier's SAID,
+placed in a log that is append-only, duplicity-evident, and witnessed.
+
+This indirection is what lets a dossier survive the verification horizons
+described under *Evidence Lifespans and Verification Timing*. An attached
+signature can be checked only against the key that produced it, and nothing in
+the signature itself establishes when it was made; once that key is rotated or
+compromised, a verifier has no way to distinguish a signature made while the
+key was authoritative from one made afterward. An anchor is evaluated against
+the key state the KEL shows was authoritative at the position where the
+anchoring event sits, so it stays verifiable across any number of later
+rotations. Because a dossier is expected to be verified years or decades after
+issuance by parties who cannot reach the issuer, anchoring is the only
+mechanism that satisfies the requirement.
+
+Accordingly, this specification uses these terms precisely:
+
+- To **anchor** an artifact is to commit its SAID into an append-only
+  verifiable log by placing a seal containing that SAID in an event of that
+  log. An **anchored** artifact therefore carries a non-repudiable and
+  perpetually verifiable commitment from the AID that controls the log.
+- **Signed** means bearing an attached digital signature computed over an
+  artifact's own bytes. In this specification, key events are signed, and so
+  are the short-lived transactional objects described under *Dossiers and
+  Derivative References*. Dossiers, endorsements, and other ACDCs are anchored.
+- **Authenticated** is used where an obligation is satisfied by either
+  mechanism — for example, the requirement that a candidate's refusal be
+  attributable to that candidate.
+
+#### Ephemeral Dossiers With Attached Signatures
+
+One narrow exception exists. A dossier that lives only for the duration of a
+single interaction, and that will never be verified after the issuer's next key
+rotation, MAY be authenticated by an attached signature over the dossier ACDC
+rather than by an anchor.
+
+An implementation that takes this option accepts three consequences:
+
+- The dossier ceases to be verifiable once the signing key is no longer part of
+  the current key state for the issuer's AID, because nothing establishes when
+  the signature was made.
+- The issuer's commitment becomes repudiable in practice. Absent a log entry,
+  there is no duplicity-evident record that the issuer ever made it.
+- Verification at a [[ref: reference-time, referenceTime]] other than the
+  present is not possible.
+
+Because these consequences remove the properties that motivate the dossier
+model in the first place, an attached signature is NOT RECOMMENDED for any
+dossier that is published, cited, cached, or otherwise expected to outlive the
+transaction that produced it. A verifier MUST NOT treat an attached signature
+as equivalent to an anchor when evaluating a dossier as of any referenceTime
+other than the present.
+
 ### The Role of the Issuer
 
-The issuer of a dossier is the entity that curates the collection of [[ref: evidence]] and attests to its composition by digitally signing the container. The issuer's signature makes a specific, verifiable assertion: at the time of issuance, the collection of evidence referenced within the dossier is the exact collection the issuer intended to present. The issuer does not necessarily attest to the veracity of the claims within the evidence, but rather to the integrity and composition of the collection itself.
+The issuer of a dossier is the entity that curates the collection of [[ref: evidence]] and attests to its composition by anchoring the container in the manner just described. That anchor makes a specific, verifiable assertion: at the time of issuance, the collection of evidence referenced within the dossier is the exact collection the issuer intended to present. The issuer does not necessarily attest to the veracity of the claims within the evidence, but rather to the integrity and composition of the collection itself.
 
 ### The Edges Attribute: Linking to Evidence
 
@@ -50,7 +124,7 @@ A compliant schema for a dossier:
 * SHOULD NOT include an issuee field.
 * SHOULD set the `additionalProperties` keyword to true at the root level and for the edges object. This design choice lets issuers add arbitrary, application-specific edges without invalidating the dossier against the base schema.
 
-This mandated flexibility has a direct consequence for implementers of verifier systems. A generic dossier verifier can be built to perform universal cryptographic validation—confirming signatures, SAIDs, and KEL consistency—for any dossier conforming to the base schema. However, such a generic verifier cannot be expected to understand the full semantics of every possible dossier. For instance, it can verify that an edge labeled "lunarPropertyDeed" is cryptographically linked, but it cannot know what that means or how to process it. Therefore, verification must be understood as a layered process. The first layer, cryptographic validation, is universal and defined by this specification. The second layer, semantic validation (e.g., "Does this dossier contain a valid TNAlloc credential for the phone number in question?"), is necessarily application-specific and requires context-dependent business logic. This separation allows the dossier format to be a universal building block for evidence aggregation across countless current and future use cases.
+This mandated flexibility has a direct consequence for implementers of verifier systems. A generic dossier verifier can be built to perform universal cryptographic validation—confirming anchors, SAIDs, and KEL consistency—for any dossier conforming to the base schema. However, such a generic verifier cannot be expected to understand the full semantics of every possible dossier. For instance, it can verify that an edge labeled "lunarPropertyDeed" is cryptographically linked, but it cannot know what that means or how to process it. Therefore, verification must be understood as a layered process. The first layer, cryptographic validation, is universal and defined by this specification. The second layer, semantic validation (e.g., "Does this dossier contain a valid TNAlloc credential for the phone number in question?"), is necessarily application-specific and requires context-dependent business logic. This separation allows the dossier format to be a universal building block for evidence aggregation across countless current and future use cases.
 
 ## Incorporating Evidence
 
@@ -167,7 +241,7 @@ explicitly links them.
 
 The dossier is a persistent, evolving data artifact with a distinct lifecycle encompassing curation, iterative assembly, state management, citation, and verification.
 
-### Curation: Assembling and Signing the Dossier
+### Curation: Assembling and Issuing the Dossier
 
 Curation is the process of creating a dossier. This phase is typically performed in advance of any real-time transaction and involves the assembly and attestation of the evidence collection.
 
@@ -179,11 +253,11 @@ The normative steps for dossier curation are as follows:
 
 3. Iterative assembly and versioning: Some dossiers are static, but with others, as new evidence is collected or the status of investigation changes, the dossier evolves. To support this, [[ref: collector]]s MAY issue new versions of a dossier. A new version MUST be a valid ACDC that links to the previous version via a prev [[ref: edge]] or a schema-specific equivalent. This creates a verifiable chain of the dossier's history, allowing verifiers to traverse back through the lineage of the evidence collection.
 
-4. Issuance initiation: For single-issuer dossiers, the [[ref: collector]] signs the fully assembled dossier ACDC. For joint issuance, the [[ref: collector]] provides the drafted ACDC to a [[ref: coordinator]]. The [[ref: coordinator]] then coordinates the signing or anchoring process among the designated members.
+4. Issuance initiation: For single-issuer dossiers, the [[ref: collector]] issues the fully assembled dossier ACDC by anchoring it. For joint issuance, the [[ref: collector]] provides the drafted ACDC to a [[ref: coordinator]]. The [[ref: coordinator]] then coordinates the endorsement and anchoring process among the designated members.
 
-5. Signing and anchoring: The [[ref: collector]] or [[ref: finalizer]] uses the private keys associated with a KERI AID to sign the dossier. This act creates a non-repudiable attestation to the dossier's content. The issuance event is then anchored in a key event log (KEL), providing a permanent record. In joint issuance, this anchor may be distributed across several KELs or consolidated in a finalization event.
+5. Anchoring: The [[ref: collector]] or [[ref: finalizer]] saidifies the dossier, places a seal containing that SAID in an event, and anchors the event in the key event log (KEL) of a KERI AID they control — directly, or by way of a transaction event log whose events that KEL anchors. The private keys authoritative for that AID sign the anchoring key event, not the dossier itself. This act creates a permanent, non-repudiable attestation to the dossier's content. In joint issuance, the anchor may be distributed across several KELs or consolidated in a finalization event.
 
-6. Publication: The issuer or [[ref: coordinator]] publishes the signed dossier ACDC at a stable, publicly resolvable location, typically one or more HTTP URLs. This allows authorized verifiers to fetch the dossier when it is cited.
+6. Publication: The issuer or [[ref: coordinator]] publishes the issued dossier ACDC at a stable, publicly resolvable location, typically one or more HTTP URLs. This allows authorized verifiers to fetch the dossier when it is cited.
 
 ### State Management and Metadata Overlays
 
@@ -197,7 +271,7 @@ Many dossiers require evidence of dynamic states, such as a bank balance, a cred
 
 This process requires the [[ref: assembler]] (or a trusted "[[ref: oracle]]" service) to:
 1. Observe the dynamic state at a specific instant (`Time T`).
-2. Wrap that observation in a signed ACDC (an "[[ref: observation-attestation, Observation Attestation]]").
+2. Wrap that observation in an [[ref: observation-attestation, Observation Attestation]] ACDC.
 3. Anchor that ACDC in a KEL.
 
 The dossier then links to this static, timestamped Observation Attestation. This effectively "freezes" the data stream at a specific block height, allowing the dossier to assert, "The borrower had $50,000 in this account at the exact moment this dossier was assembled," rather than "The borrower has $50,000 now."
@@ -218,10 +292,11 @@ The verification process for a dossier requires a citation and a [[ref: referenc
 
 3. Determine issuance model: inspect the attributes block for an `fi` [[ref: finalization-identifier, finalization identifier]] and the edges block for a joint-issuance [[ref: threshold-operator, threshold operator]] (`MxN`, `RMxN`, `MxQ`, or `RMxQ`) in an edge group's `o` field.
 
-4. Validate signatures and anchors:
+4. Validate anchors:
    a. If `fi` is present and non-null, locate the finalization event in the KEL of the AID it names. Verify that the event carries the threshold-satisfying endorsements for the relevant operator.
-   b. If `fi` is absent or null but a threshold operator is present, evaluate each slot in the operator's edge group. A slot is **Endorsed** only when it references a signed Endorsement ACDC with `disp` `"endorse"` and `act` appropriate to the operation, issued by the expected endorser and anchored in that endorser's KEL. Confirm that the weights (`w`) of the Endorsed slots sum to at least unity (1) — for the qualified operators, using the uniform member weight the operator declares. For the qualified operators, additionally verify that each counted endorsement carries a qualification proof (`e.qp`) that validates against the schema named in the operator's `qs` field.
-   c. For standard dossiers with a single issuer, retrieve the issuer KEL and verify the signature against the public keys authoritative at the referenceTime.
+   b. If `fi` is absent or null but a threshold operator is present, evaluate each slot in the operator's edge group. A slot is **Endorsed** only when it references an Endorsement ACDC with `disp` `"endorse"` and `act` appropriate to the operation, issued by the expected endorser and anchored in that endorser's KEL. Confirm that the weights (`w`) of the Endorsed slots sum to at least unity (1) — for the qualified operators, using the uniform member weight the operator declares. For the qualified operators, additionally verify that each counted endorsement carries a qualification proof (`e.qp`) that validates against the schema named in the operator's `qs` field.
+   c. For standard dossiers with a single issuer, retrieve the issuer's KEL and locate the event anchoring a seal that contains the dossier's SAID — either directly, or by way of a transaction event log whose events the KEL anchors. Verify that anchoring event's signatures against the key state the KEL establishes as authoritative *at that event's position in the log*, not against the key state current at the referenceTime; an anchor remains verifiable across any number of later rotations, and requiring the referenceTime key state would defeat that property. Then confirm that the anchoring event precedes the referenceTime.
+   d. Only if the dossier was authenticated by an attached signature under *Ephemeral Dossiers With Attached Signatures*, verify that signature against the issuer's current key state. A verifier MUST reject such a dossier when the referenceTime is not the present, and SHOULD reject it when the dossier was retrieved from a cache or a published location rather than received directly within the transaction it authenticates.
 
 5. Recursive graph traversal: for each named edge in the edges block, fetch the referenced artifact and perform this validation algorithm recursively.
 
@@ -259,7 +334,7 @@ additional fields appropriate to their domain.
 
 - **`assembly_dt`**: An ISO 8601 timestamp recording when the dossier was assembled.
   This is distinct from the issuance date recorded in the ACDC envelope, which may
-  differ if the dossier was finalized and signed at a later time.
+  differ if the dossier was finalized and anchored at a later time.
 
 - **`assembler`**: The AID or human-readable name of the entity that curated the
   evidence collection. This field is most useful when the assembler differs from
@@ -327,7 +402,7 @@ additional fields appropriate to their domain.
   constraints applied to the underlying investigation.
   
 ## Joint Issuance
-A dossier may be assembled and signed by a single party. For example, an artist who wishes to collect cryptographic evidence of their creations may do so as a solo activity. However, many dossiers snapshot evidence contributions from multiple parties, and so represent a group work product that needs an aggregate approval mechanism. In such cases, signing the ACDC that references all the individual pieces of evidence is managed with joint issuance.
+A dossier may be assembled and issued by a single party. For example, an artist who wishes to collect cryptographic evidence of their creations may do so as a solo activity. However, many dossiers snapshot evidence contributions from multiple parties, and so represent a group work product that needs an aggregate approval mechanism. In such cases, authorizing the issuance of the ACDC that references all the individual pieces of evidence is managed with joint issuance.
 
 ### Logic
 Joint issuance is best understood not as a single, uniform approach to approval, but as a family or style of approval strategies. It maps onto the problem domain of coordinated control in multi-agent systems, which has been formally studied in robotics, AI, military science, and similar fields. Three variants of cooperative control are regularly mentioned in the literature [[5]] [[6]] [[7]]:
@@ -336,7 +411,7 @@ Joint issuance is best understood not as a single, uniform approach to approval,
 * behavior-based control
 * virtual structures
 
-A dossier can be approved using any of these variants, and this specification normatively describes success using primitives relevant to all three. The description below focuses on the leader-follower approach because it is the simplest to understand and lends itself most easily to deterministic guarantees. Whatever cooperative control mechanism is chosen, the process involves asynchronous signing that converges on a common goal, possibly over a significant span of time. Unlike group multisig, which requires synchronous agreement on key event log (KEL) sequence numbers, joint issuance relies on logic within the ACDC layer. This lets members contribute signatures or seals to a dossier at different times and via different channels without immediate impact on a shared KEL.
+A dossier can be approved using any of these variants, and this specification normatively describes success using primitives relevant to all three. The description below focuses on the leader-follower approach because it is the simplest to understand and lends itself most easily to deterministic guarantees. Whatever cooperative control mechanism is chosen, the process involves asynchronous endorsement that converges on a common goal, possibly over a significant span of time. Unlike group multisig, which requires synchronous agreement on key event log (KEL) sequence numbers, joint issuance relies on logic within the ACDC layer. This lets members anchor their endorsements of a dossier at different times and via different channels, each in their own KEL, without immediate impact on a shared one.
 
 The validity of a jointly issued dossier is determined by satisfying a [[ref: threshold-operator, threshold operator]] within its [[ref: edge]] graph. Because the logic is decoupled from key management, issuance and verification have more flexibility.
 
@@ -355,23 +430,23 @@ For an ordinary *m*-of-*n* rule among equal endorsers, each of the *n* slots is 
 #### Slot dispositions
 Within a threshold operator's edge group, each member edge is a slot that points (via its `n` field) to an endorsement ACDC, names the schema that endorsement MUST satisfy (via its `s` field), and assigns the endorsement a weight (via its reserved `w` field). The expected endorser is identified by the issuer (`i`) of the ACDC the slot references. A slot is in exactly one of three dispositions:
 
-* **Pending**: the slot references an unsigned meta ACDC that names the candidate endorser but carries no signature (or the slot is null). This is the initial state the dossier creator establishes for each candidate. A pending slot contributes nothing to the threshold sum; it records only that an endorsement is anticipated from the named candidate.
-* **Endorsed**: the slot references a signed [[ref: endorsement]] ACDC issued by the candidate, with a `disp` (disposition) of `"endorse"` and a `said` attribute equal to the dossier's SAID. This is an authenticated act, and the slot's weight `w` is added to the threshold sum.
-* **Declined**: the slot references the same signed [[ref: endorsement]] ACDC issued by the candidate, but with a `disp` of `"decline"` — a [[ref: declination]]. This is an authenticated refusal. Its weight is not added to the threshold sum, but, unlike a pending slot, it records attributable dissent — distinguishing a candidate who was asked and refused from one who has not yet acted.
+* **Pending**: the slot references a placeholder meta ACDC that names the candidate endorser but that the candidate has not anchored (or the slot is null). This is the initial state the dossier creator establishes for each candidate. A pending slot contributes nothing to the threshold sum; it records only that an endorsement is anticipated from the named candidate.
+* **Endorsed**: the slot references an [[ref: endorsement]] ACDC issued by the candidate and anchored in the candidate's KEL, with a `disp` (disposition) of `"endorse"` and a `said` attribute equal to the dossier's SAID. This is an authenticated act, and the slot's weight `w` is added to the threshold sum.
+* **Declined**: the slot references the same [[ref: endorsement]] ACDC, issued by the candidate and anchored in the candidate's KEL, but with a `disp` of `"decline"` — a [[ref: declination]]. This is an authenticated refusal. Its weight is not added to the threshold sum, but, unlike a pending slot, it records attributable dissent — distinguishing a candidate who was asked and refused from one who has not yet acted.
 
-Because only a signature authenticates a candidate's decision, a pending slot and an absent slot are equivalent in trust terms: neither attributes any act to the candidate. An active "no" MUST therefore be expressed as a signed declination, never as a null or unsigned slot.
+Because only the candidate's anchor authenticates the candidate's decision, a pending slot and an absent slot are equivalent in trust terms: neither attributes any act to the candidate. An active "no" MUST therefore be expressed as an anchored [[ref: declination]], never as a null or unanchored slot.
 
 ### Threshold Operators
 The following operators are defined for the `o` field of an edge group to support joint issuance. Each is satisfied when the weights (`w`) of its **Endorsed** slots sum to at least unity (1).
 
 All four operators use a single [[ref: endorsement]] schema (SAID `EAfn0gRMUnp6d1hyE5qJCN86kBFBp80JwMdm0BqiC1B0`); a slot's `s` field names this one schema throughout. Three fields on the endorsement distinguish the cases: `disp` (`"endorse"` to add the slot's weight, `"decline"` to record dissent), `act` (`"issue"` or `"revoke"`), and the optional qualification-proof edge `e.qp` (present for the qualified operators, omitted otherwise). The operator's own name, together with the `act` of the endorsements it counts, distinguishes issuance from revocation.
 
-* `MxN` ("M of N"): an issuance [[ref: threshold-operator, threshold operator]]. The edge group contains exactly *N* slots, one per candidate endorser, each carrying a weight `w`, and is satisfied when the weights of the **Endorsed** slots sum to at least unity. For the common equal-weight case, each slot is given `w` of `1/m`, so that any *m* of the *n* endorse to reach unity. Each counted endorsement MUST carry `act` `"issue"` and `disp` `"endorse"`, and omits the `e.qp` proof edge. Because the *N* candidates are enumerated structurally as slots — each naming its expected endorser through the issuer of the ACDC it references — the operator embodies an *m of n* pattern without any separate enumeration of potential signers. An example is a judicial decision jointly issued by *m* of *n* named justices.
+* `MxN` ("M of N"): an issuance [[ref: threshold-operator, threshold operator]]. The edge group contains exactly *N* slots, one per candidate endorser, each carrying a weight `w`, and is satisfied when the weights of the **Endorsed** slots sum to at least unity. For the common equal-weight case, each slot is given `w` of `1/m`, so that any *m* of the *n* endorse to reach unity. Each counted endorsement MUST carry `act` `"issue"` and `disp` `"endorse"`, and omits the `e.qp` proof edge. Because the *N* candidates are enumerated structurally as slots — each naming its expected endorser through the issuer of the ACDC it references — the operator embodies an *m of n* pattern without any separate enumeration of potential endorsers. An example is a judicial decision jointly issued by *m* of *n* named justices.
 * `RMxN` ("Revocation M of N"): a [[ref: revocation-operator, revocation operator]] with the same mechanics as `MxN`, applied to revocation. Its slots likewise carry weights summed to unity, and each counted endorsement MUST carry `act` `"revoke"`. The set of revocation slots MAY be identical to, overlap, or be disjoint from the issuance slots, and the revocation weights MAY differ from the issuance weights, so the authority to revoke can be configured independently of the authority to issue.
 * `MxQ` ("M of Qualified"): an issuance threshold operator for an open-ended set of qualified endorsers. Unlike `MxN`, the slot count is not fixed in advance; slots are added as qualified endorsers act. Because the members are not known when the dossier is assembled, the operator declares a uniform member weight in its own `w` field, applied to each qualified **Endorsed** endorsement; the group is satisfied when those weights sum to unity (equivalently, when at least `1/w` qualified endorsers have endorsed). Each counted endorsement MUST carry `act` `"issue"`, `disp` `"endorse"`, and a qualification-proof edge `e.qp`. The edge group MUST also carry a `qs` field naming the SAID of the schema that each endorser's qualification proof MUST satisfy; the dossier creator chooses this proof schema to suit the use case, since the proof of qualification differs from one context to another. This models an endorsement open to anyone who can prove they are qualified — for example, "any licensed physician in good standing."
 * `RMxQ` ("Revocation M of Qualified"): a revocation threshold operator with the same mechanics as `MxQ`, applied to revocation. It likewise declares a uniform member weight in its `w` field summed to unity, and each counted endorsement MUST carry `act` `"revoke"` and a qualification-proof edge `e.qp`. As with `RMxN`, the qualified revoker set and weights MAY be configured independently of issuance.
 
-A **Declined** disposition under any of these operators is the same endorsement ACDC signed with `disp` `"decline"` and the matching `act`. For the qualified operators, whether a declination must also carry a qualification proof is a policy choice left to the governing schema; a declination never adds its weight to the threshold sum in any case.
+A **Declined** disposition under any of these operators is the same endorsement ACDC, anchored with `disp` `"decline"` and the matching `act`. For the qualified operators, whether a declination must also carry a qualification proof is a policy choice left to the governing schema; a declination never adds its weight to the threshold sum in any case.
 
 ### Finalization
 A joint issuance MAY advertise a finalization event to assist verifiers that do not perform recursive graph traversal. This is signaled by the `fi` ("finalization identifier") field in the dossier's attributes (`a`) section, rather than by an edge operator.
@@ -387,7 +462,7 @@ Revocation logic in a joint issuance is defined independently of issuance logic,
 
 ## Dossiers and Derivative References
 
-A dossier is intentionally heavy. It may be assembled once and signed jointly by many parties, may carry a graph of arbitrarily many evidence items, and may require a verifier to fetch and validate every node in that graph against multiple KELs. This cost is acceptable because a dossier is designed for reuse: curation happens once, and the resulting artifact serves as an authoritative reference for many later transactions, verifiers, and decisions.
+A dossier is intentionally heavy. It may be assembled once and issued jointly by many parties, may carry a graph of arbitrarily many evidence items, and may require a verifier to fetch and validate every node in that graph against multiple KELs. This cost is acceptable because a dossier is designed for reuse: curation happens once, and the resulting artifact serves as an authoritative reference for many later transactions, verifiers, and decisions.
 
 In transactional protocols, however, the dossier itself is rarely transmitted. Sending a multi-kilobyte ACDC and requiring full recursive verification on every call is impractical for real-time use cases such as a phone call, a checkout step, or an API request. Instead, the transactional payload carries a lightweight [[ref: derivative]] that references the dossier. The dossier remains the primary, persistent artifact; the derivative is short-lived, single-purpose, and cheap to produce and validate.
 
@@ -395,7 +470,7 @@ This specification recognizes two derivative forms:
 
 - **Citation.** A resolvable identifier (canonically an OOBI URL) that lets a verifier fetch the full dossier and run the verification algorithm. Citations are defined under *Citation: Referencing the Dossier in Protocols* above.
 
-- **Token.** A short-lived signed object that carries enough context for an immediate verification decision and embeds the dossier SAID as an evidence pointer. A minimal token might take this shape:
+- **Token.** A short-lived signed object that carries enough context for an immediate verification decision and embeds the dossier SAID as an evidence pointer. A token is one of the few artifacts in this specification that genuinely bears an attached signature, in the sense defined under *How a Dossier Is Issued: Anchoring, Not Attached Signatures*; it can afford one because its lifetime is measured in seconds and it is never expected to outlive a key rotation. A minimal token might take this shape:
 
     ```json
     {
@@ -410,7 +485,7 @@ This specification recognizes two derivative forms:
 
     with a signature over the canonical encoding. The token asserts that, between `iat` and `exp`, its bearer is acting under the authority of the dossier whose SAID is given in `evd`. A verifier with a cached, previously validated copy of the dossier MAY accept the token without re-traversing the evidence graph. A verifier that requires fresh assurance dereferences `evd`, runs the full verification algorithm, and caches the result for subsequent presentations.
 
-A derivative MUST cryptographically bind to the dossier it references — minimally by including the dossier SAID under the derivative's signature. A derivative MUST NOT be treated as independent evidence: its authority derives entirely from the dossier, and its trust value collapses to that of the dossier alone if the binding cannot be checked.
+A derivative MUST cryptographically bind to the dossier it references — minimally by including the dossier SAID under whichever mechanism authenticates the derivative: the signature over a token's payload, or the resolvable identifier that constitutes a citation. A derivative MUST NOT be treated as independent evidence: its authority derives entirely from the dossier, and its trust value collapses to that of the dossier alone if the binding cannot be checked.
 
 Derivatives inherit the dossier's revocation lifecycle. When a verifier evaluates a derivative, it MUST consult the dossier's revocation state effective at the verification time, not at the time the derivative was issued. A token issued before its referenced dossier was revoked is not valid after the revocation event, even if the token's own `exp` has not yet passed.
 
@@ -429,7 +504,7 @@ The security of the dossier model is founded on the cryptographic primitives pro
 
 Integrity: Self-addressing identifiers (SAIDs) guarantee the integrity of the dossier and all ACDC-native evidence within its graph. A SAID is a cryptographic hash of an object's canonical content. Any modification to the data results in a different SAID, making tampering immediately evident.
 
-Non-repudiation: Digital signatures make the act of issuing a dossier non-repudiable. These signatures are cryptographically anchored in a key event log (KEL), which serves as a permanent, publicly auditable, and tamper-evident log of all significant actions. In joint issuance, the collective anchors of all participating members in their respective KELs provide non-repudiation. A finalization event, if used, provides a single cryptographic record of this consensus.
+Non-repudiation: Anchoring makes the act of issuing a dossier non-repudiable. The issuer commits the dossier's SAID into a key event log (KEL) — a permanent, publicly auditable, and tamper-evident log of all significant actions — by placing a seal in a key event that the issuer's authoritative keys sign. The signature is on that key event rather than on the dossier; what a verifier relies on is the presence of the commitment in a log the issuer cannot rewrite and witnesses can attest to. In joint issuance, the collective anchors of all participating members in their respective KELs provide non-repudiation. A finalization event, if used, provides a single cryptographic record of this consensus.
 
 ### Replay Attack Mitigation in Citation Protocols
 
@@ -455,7 +530,7 @@ This capability is critical for use cases involving compliance and legal discove
 
 Dossiers MAY support privacy-preserving disclosure of their contents through the graduated disclosure mechanism inherent to the ACDC specification. An ACDC is a hierarchical JSON object, and its SAID is computed recursively: the hash of a parent object is derived from its scalar values and the SAIDs of its child objects.
 
-This structure means that any child object within an ACDC can be replaced by its SAID without altering the SAID of the parent object and without invalidating the digital signature on the entire container. This allows the holder or issuer of a dossier to generate redacted versions of the ACDC. These versions selectively hide sensitive information while remaining cryptographically verifiable. In joint issuance, redaction does not affect the validity of member seals anchored in KELs, as those seals point to the immutable SAID of the root dossier.
+This structure means that any child object within an ACDC can be replaced by its SAID without altering the SAID of the parent object. Because what the issuer anchored is that top-level SAID, redaction leaves the issuer's commitment intact: the redacted form still hashes to the SAID sealed in the issuer's KEL. This is a further consequence of anchoring rather than signing — had the issuer signed the container's bytes, any redaction would have invalidated that signature. This allows the holder or issuer of a dossier to generate redacted versions of the ACDC. These versions selectively hide sensitive information while remaining cryptographically verifiable. In joint issuance, redaction does not affect the validity of member seals anchored in KELs, as those seals point to the immutable SAID of the root dossier.
 
 ### Analysis of Data Correlation Vectors
 
@@ -518,7 +593,7 @@ The Mortgage Qualification profile illustrates the **Snapshot Dossier** pattern,
 
 * **Goal:** Prove the state of a changing system at a specific point in time.
 * **Key Concept: Temporal Pinning.** A dossier cannot simply link to a bank's API, as the balance changes. It must link to a static artifact.
-* **Mechanism:** This pattern employs the **[[ref: oracle, Oracle]]** or **[[ref: oracle, Observer]]** role. The assembler (or a trusted third-party service) queries the dynamic data source at `Time T`. This observation is then wrapped in a signed ACDC (an "Observation Attestation") that effectively says, "I observed Account X having Balance Y at Block Height Z." The dossier links to this static attestation. This converts a stream of data into a verifiable snapshot, allowing a loan officer to verify "Funds Available" at the exact moment of the application.
+* **Mechanism:** This pattern employs the **[[ref: oracle, Oracle]]** or **[[ref: oracle, Observer]]** role. The assembler (or a trusted third-party service) queries the dynamic data source at `Time T`. This observation is then wrapped in an Observation Attestation ACDC, which the observer anchors in its own KEL, that effectively says, "I observed Account X having Balance Y at Block Height Z." The dossier links to this static attestation. This converts a stream of data into a verifiable snapshot, allowing a loan officer to verify "Funds Available" at the exact moment of the application.
 
 ### Clinical Trials: The Predicate Dossier
 
@@ -534,9 +609,9 @@ This profile introduces the **Predicate Dossier** pattern, essential for environ
 
 This profile demonstrates the **Open-Endorsement Dossier** pattern, designed for cases where the set of participants is large or cannot be fully enumerated at the start of the curation process.
 
-- **Goal:** Collect a threshold of endorsements from a distributed and potentially dynamic set of signers.
+- **Goal:** Collect a threshold of endorsements from a distributed and potentially dynamic set of endorsers.
 - **Key Concept: Asynchronous Threshold Satisfaction.** Unlike a standard multisig group that requires tight coordination among a fixed set of peers, this pattern allows any AID that satisfies the criteria defined in the dossier schema to contribute an endorsement.
-- **Mechanism:** The coordinator initiates the dossier and distributes the candidate ACDC. Because the qualified signer set is open-ended, the dossier uses the `MxQ` operator to define the conditions for validity: enough qualified, unique endorsements that their weights sum to unity (with a uniform per-member weight `w`, that means at least `1/w` endorsers), where each endorser proves qualification through the proof schema named in the operator's `qs` field. Participants signify their agreement by issuing a qualified Endorsement ACDC and anchoring it in their individual KELs.
+- **Mechanism:** The coordinator initiates the dossier and distributes the candidate ACDC. Because the qualified endorser set is open-ended, the dossier uses the `MxQ` operator to define the conditions for validity: enough qualified, unique endorsements that their weights sum to unity (with a uniform per-member weight `w`, that means at least `1/w` endorsers), where each endorser proves qualification through the proof schema named in the operator's `qs` field. Participants signify their agreement by issuing a qualified Endorsement ACDC and anchoring it in their individual KELs.
 - **Verification:** A verifier confirms the dossier is valid by observing that enough qualified endorsers' KELs carry a valid endorsement of the dossier SAID for their weights to reach unity. The coordinator may set the dossier's `fi` field and finalize the issuance once that point is reached, simplifying this check for third parties.
 
 ## Bibliography
