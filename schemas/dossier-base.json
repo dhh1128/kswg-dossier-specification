@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "ECpZgR2Ybj2QCfFZrnNQUqhbLnZuMl5cjL2MtgDaxMbY",
+  "$id": "EKuLzS_oN_mIao5og1NOujtF2QMXloiMCZP7xuAR5tY7",
   "title": "Dossier Base Schema",
   "description": "Base schema defining the canonical structure of a Dossier ACDC. A schema S IS-A dossier iff S's top-level allOf array contains a $ref to this schema's SAID, or recursively to another schema that IS-A dossier. A dossier SHOULD NOT include an issuee; all evidence MUST be carried in e, never in a.",
   "type": "object",
@@ -61,7 +61,7 @@
             "assembly_dt": {
               "type": "string",
               "format": "date-time",
-              "description": "ISO 8601 timestamp recording when the dossier was assembled. Distinct from the envelope issuance date, which may differ if the dossier was finalized and signed later."
+              "description": "ISO 8601 timestamp recording when the dossier was assembled. Distinct from the envelope issuance date, which may differ if the dossier was finalized and anchored later."
             },
             "assembler": {
               "type": "string",

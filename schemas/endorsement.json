@@ -1,8 +1,8 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "EAfn0gRMUnp6d1hyE5qJCN86kBFBp80JwMdm0BqiC1B0",
+  "$id": "ECRjgun8t3cay_YBiVxEY-qXKCz37oUrvE5GvmySwxCh",
   "title": "Endorsement",
-  "description": "Endorsement ACDC used by the joint-issuance threshold operators (MxN, RMxN, MxQ, RMxQ). Its issuer (i) records a disposition (disp) toward the subject identified by 'said' for the act named in 'act'. A signed instance with disp 'endorse' is an authenticated endorsement that counts toward a threshold; a signed instance with disp 'decline' is an authenticated declination that records attributable dissent and never counts. An unsigned instance is only a placeholder reserving a slot for a named candidate; its field values are not authoritative until signed. For the qualified operators (MxQ, RMxQ) the endorser additionally supplies a qualification-proof edge (e.qp), and the operator's 'qs' field names the schema that proof must satisfy; for the unqualified operators (MxN, RMxN) the edges block is omitted.",
+  "description": "Endorsement ACDC used by the joint-issuance threshold operators (MxN, RMxN, MxQ, RMxQ). Its issuer (i) records a disposition (disp) toward the subject identified by 'said' for the act named in 'act'. An endorsement is authenticated by anchoring: the endorser seals this ACDC's SAID in an event of its own KEL, directly or by way of a TEL that KEL anchors. It is not signed and carries no attached signature. An anchored instance with disp 'endorse' is an authenticated endorsement that counts toward a threshold; an anchored instance with disp 'decline' is an authenticated declination that records attributable dissent and never counts. An unanchored instance is only a placeholder reserving a slot for a named candidate; its field values are not authoritative until anchored. For the qualified operators (MxQ, RMxQ) the endorser additionally supplies a qualification-proof edge (e.qp), and the operator's 'qs' field names the schema that proof must satisfy; for the unqualified operators (MxN, RMxN) the edges block is omitted.",
   "type": "object",
   "additionalProperties": true,
   "required": [
@@ -23,7 +23,7 @@
     },
     "i": {
       "type": "string",
-      "description": "AID of the endorser. In an unsigned placeholder it names the candidate from whom a disposition is expected; in a signed instance it is the authenticated endorser."
+      "description": "AID of the endorser. In an unanchored placeholder it names the candidate from whom a disposition is expected; in an anchored instance it is the authenticated endorser."
     },
     "s": {
       "type": "string",
@@ -71,7 +71,7 @@
                 "endorse",
                 "decline"
               ],
-              "description": "The endorser's disposition. 'endorse' is an approval that, when signed, counts toward the operator's threshold. 'decline' is an authenticated refusal that records attributable dissent and never counts."
+              "description": "The endorser's disposition. 'endorse' is an approval that, when anchored, counts toward the operator's threshold. 'decline' is an authenticated refusal that records attributable dissent and never counts."
             },
             "reason": {
               "type": "string",

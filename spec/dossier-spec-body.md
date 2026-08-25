@@ -106,7 +106,7 @@ A compliant schema for a dossier:
         "allOf": [
             { 
                 "description": "reference to dossier base schema",
-                "$ref": "ECpZgR2Ybj2QCfFZrnNQUqhbLnZuMl5cjL2MtgDaxMbY"
+                "$ref": "EKuLzS_oN_mIao5og1NOujtF2QMXloiMCZP7xuAR5tY7"
             },
             {
                 "type": "object",
@@ -439,7 +439,7 @@ Because only the candidate's anchor authenticates the candidate's decision, a pe
 ### Threshold Operators
 The following operators are defined for the `o` field of an edge group to support joint issuance. Each is satisfied when the weights (`w`) of its **Endorsed** slots sum to at least unity (1).
 
-All four operators use a single [[ref: endorsement]] schema (SAID `EAfn0gRMUnp6d1hyE5qJCN86kBFBp80JwMdm0BqiC1B0`); a slot's `s` field names this one schema throughout. Three fields on the endorsement distinguish the cases: `disp` (`"endorse"` to add the slot's weight, `"decline"` to record dissent), `act` (`"issue"` or `"revoke"`), and the optional qualification-proof edge `e.qp` (present for the qualified operators, omitted otherwise). The operator's own name, together with the `act` of the endorsements it counts, distinguishes issuance from revocation.
+All four operators use a single [[ref: endorsement]] schema (SAID `ECRjgun8t3cay_YBiVxEY-qXKCz37oUrvE5GvmySwxCh`); a slot's `s` field names this one schema throughout. Three fields on the endorsement distinguish the cases: `disp` (`"endorse"` to add the slot's weight, `"decline"` to record dissent), `act` (`"issue"` or `"revoke"`), and the optional qualification-proof edge `e.qp` (present for the qualified operators, omitted otherwise). The operator's own name, together with the `act` of the endorsements it counts, distinguishes issuance from revocation.
 
 * `MxN` ("M of N"): an issuance [[ref: threshold-operator, threshold operator]]. The edge group contains exactly *N* slots, one per candidate endorser, each carrying a weight `w`, and is satisfied when the weights of the **Endorsed** slots sum to at least unity. For the common equal-weight case, each slot is given `w` of `1/m`, so that any *m* of the *n* endorse to reach unity. Each counted endorsement MUST carry `act` `"issue"` and `disp` `"endorse"`, and omits the `e.qp` proof edge. Because the *N* candidates are enumerated structurally as slots — each naming its expected endorser through the issuer of the ACDC it references — the operator embodies an *m of n* pattern without any separate enumeration of potential endorsers. An example is a judicial decision jointly issued by *m* of *n* named justices.
 * `RMxN` ("Revocation M of N"): a [[ref: revocation-operator, revocation operator]] with the same mechanics as `MxN`, applied to revocation. Its slots likewise carry weights summed to unity, and each counted endorsement MUST carry `act` `"revoke"`. The set of revocation slots MAY be identical to, overlap, or be disjoint from the issuance slots, and the revocation weights MAY differ from the issuance weights, so the authority to revoke can be configured independently of the authority to issue.
