@@ -39,7 +39,7 @@ jobs:
       - name: Checkout 🛎️
         uses: actions/checkout@v6
         with:
-          persist-credentials: true  # We’ll use MY_PAT for push
+          persist-credentials: true  # The push step below authenticates with GITHUB_TOKEN
 
       - name: Set up Node.js
         uses: actions/setup-node@v6
@@ -65,7 +65,6 @@ jobs:
 
       - name: Run selected script
         env:
-          MY_PAT: ${{ secrets.MY_PAT }} # Make the secret available as an env var
           # freeze_label is free-form dispatch input. Bind it to an env var rather
           # than interpolating it into the shell command, so a label containing
           # shell metacharacters cannot inject commands into this step.
