@@ -313,7 +313,9 @@ The verification process for a dossier requires a citation and a [[ref: referenc
 
 6. Check revocation status: for the dossier and every node in the evidence graph, consult the relevant KELs or status registries for revocation events effective at the referenceTime.
 
-7. Apply semantic rules: apply application-specific policy rules once cryptographic validation is complete.
+7. Check artifact digests: for every node in the graph that is a [[ref: foreign-artifact-wrapper, Foreign Artifact wrapper]] whose artifact accompanies the dossier or is otherwise available to the verifier, recompute the artifact's digest using the algorithm identified by the CESR primitive code of the wrapper's `content_digest`, and compare. A mismatch MUST fail verification, and the verifier SHOULD report which artifact failed. Where the artifact is not available, the wrapper itself may still verify, but the artifact does not: a verifier MUST NOT treat a valid wrapper as evidence that the bytes it describes are intact, and SHOULD report the artifact as unchecked rather than as passing.
+
+8. Apply semantic rules: apply application-specific policy rules once cryptographic validation is complete.
 
 ### The Attributes Section: Proximate Metadata
 
