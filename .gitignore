@@ -12,8 +12,10 @@ build
 *.bak
 *.tmp
 .DS_Store
-# Environment / secrets
-.env*
+# Environment / secrets. .env.example is a tracked template — keep it.
+.env
+.env.*
+!.env.example
 # Test coverage
 coverage/
 # Caches and history
@@ -24,7 +26,11 @@ coverage/
 .cache/
 .AppleDouble
 .LSOverride
-Icon\r          # (the \r is intentional — it's a hidden carriage-return file)
+# macOS folder-icon file, whose name is literally "Icon" plus a carriage return.
+# The bracket below holds that CR byte; this is the form github/gitignore ships
+# in Global/macOS.gitignore. Do not "clean up" the line — Icon? would also
+# swallow Icons/, Icon1 and anything else five characters long.
+Icon[]
 Thumbs.db
 ehthumbs.db
 Desktop.ini
