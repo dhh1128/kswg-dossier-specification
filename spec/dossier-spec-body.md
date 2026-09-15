@@ -157,6 +157,26 @@ two keys:
 
 This pattern is exemplified by the sample dossier in the VVP specification.
 
+#### Edge Operators on Evidence Edges
+
+An `{n, s}` pair with no operator field is sufficient for most dossier edges, and it is worth saying why, because an implementer who reaches for an explicit `o` on every edge is usually solving a problem that has already been solved by construction.
+
+ACDC's default operators divide on whether the target has an issuee. A target without one — every [[ref: foreign-artifact-wrapper, Foreign Artifact wrapper]], every [[ref: observation-attestation, Observation Attestation]], and any other attestation about a thing rather than about a party — defaults to NI2I, which asks only whether the target was issued. A target that does have an issuee defaults to I2I, which additionally requires the referring ACDC's issuer to be that issuee.
+
+For a dossier, I2I usually holds without anyone arranging it. A dossier's issuer is the party whose authority the dossier is exercised under, and the credential conferring that authority names that same party as its issuee, so the edge from dossier to role credential satisfies I2I as a matter of who the parties are. The same is generally true hop by hop up an authority chain, where each credential's issuer is the issuee of the one above it.
+
+Issuers therefore SHOULD omit `o` on evidence edges and let the defaults apply, and SHOULD state it explicitly only where the intended semantics differ from the default. A verifier MUST apply the ACDC default when no operator is present rather than treating an absent operator as an absent constraint.
+
+### Binding the Issuer's Authority
+
+A dossier attests to the composition of a collection, and a verifier that has checked the anchor knows who made that attestation. It does not yet know whether that party was entitled to make it. For many dossiers the question does not arise: an artist collecting evidence of their own work needs no authorization. For any dossier issued on an organization's behalf, or under a license, role, or delegation, it is the first question a verifier asks.
+
+A dossier SHOULD answer it structurally, with an edge to the credential that confers the authority under which the dossier was issued. The edge SHOULD be named `authority`. Reserving one conventional name lets a generic verifier locate the authority chain without knowing the dossier's domain, while every other edge name remains free-form and is resolved by SAID as before.
+
+How deep the chain is spelled out in the dossier is a schema-level choice, and deployments reasonably differ. A dossier MAY carry sibling edges to several credentials that are jointly necessary — one vetting the organization, another conferring the signing role — or it MAY carry a single `authority` edge and leave the verifier to reach the rest by traversing edges that the referenced credential's own schema already makes normative. Both are conforming. The second is often preferable, since duplicating a hop the verifier must walk anyway creates two statements of one fact that can disagree.
+
+The consequence for verifiers is that the absence of an edge proves nothing about the absence of a link. A verifier MUST follow an authority chain transitively to its root, through the referenced credentials' own edges, and MUST NOT require that every hop appear as a direct edge of the dossier. Where the chain does not terminate at a root named in the acceptance policy, the outcome is INVALID.
+
 ### Referencing Non-ACDC Evidence
 
 Not all evidence exists as a native ACDC. This specification recognizes two
@@ -345,7 +365,7 @@ The verification process for a dossier requires a citation and a [[ref: referenc
    c. For standard dossiers with a single issuer, retrieve the issuer's KEL and locate the event anchoring a seal that contains the dossier's SAID — either directly, or by way of a transaction event log whose events the KEL anchors. Verify that anchoring event's signatures against the key state the KEL establishes as authoritative *at that event's position in the log*, not against the key state current at the referenceTime; an anchor remains verifiable across any number of later rotations, and requiring the referenceTime key state would defeat that property. Then confirm that the anchoring event precedes the referenceTime.
    d. Only if the dossier was authenticated by an attached signature under *Ephemeral Dossiers With Attached Signatures*, verify that signature against the issuer's current key state. A verifier MUST reject such a dossier when the referenceTime is not the present, and SHOULD reject it when the dossier was retrieved from a cache or a published location rather than received directly within the transaction it authenticates.
 
-7. Recursive graph traversal: for each named edge in the edges block, fetch the referenced artifact and perform this validation algorithm recursively.
+7. Recursive graph traversal: for each named edge in the edges block, fetch the referenced artifact and perform this validation algorithm recursively. Where an `authority` edge is present, follow it transitively through the referenced credentials' own edges, as described under *Binding the Issuer's Authority*, and confirm that the chain terminates at a root named in the acceptance policy.
 
 8. Check revocation status: for the dossier and every node in the evidence graph, consult the relevant KELs or status registries for revocation events effective at the referenceTime.
 
