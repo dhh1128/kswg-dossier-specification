@@ -550,6 +550,10 @@ The dossier model operates on a decentralized root of trust. A verifier does not
 
 The foundation of this trust is the KERI witness infrastructure. Witnesses are independent services that act as notaries for an AID's KEL. By requiring an issuer to report its key events to a set of witnesses, the system gains high availability and duplicity detection. Verifiers SHOULD consult multiple witnesses to ensure they have a consistent and complete view of an issuer's KEL, thereby protecting against duplicity and compromise.
 
+One configuration deserves separate mention, because it is common in regulated settings and because it simplifies the trust decision considerably. Where a dossier is submitted to the same authority that roots the issuer's credential chain — a regulator receiving a filing from an entity it licensed, an accreditor receiving a renewal from a body it accredited — the verifier and the root of trust are the same party. The verifier is then not weighing whether to extend trust to someone else's root. It is confirming that the chain terminates at itself, and rejecting anything that does not.
+
+This closed loop removes most of the judgment from trust configuration, but it does not remove the configuration. The authority must still state which root AIDs it recognizes as its own and which schemas it governs, because a chain that reaches the right root through a credential type the authority never defined is not something the authority can evaluate. It also does not remove the need for witnesses: an authority verifying a submission against its own root still depends on witnessed KELs to detect duplicity in the submitter's key history, and SHOULD apply the same multi-witness discipline it would apply to a stranger.
+
 ### Long-Term Auditability and Historical Analysis
 
 The KERI-based dossier ecosystem supports long-lived auditing. Because KELs provide a complete, verifiable, and sequenced history of an identifier's key state, a verifier can perform validation for any arbitrary point in the past. 
