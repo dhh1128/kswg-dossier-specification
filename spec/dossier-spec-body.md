@@ -106,7 +106,7 @@ A compliant schema for a dossier:
         "allOf": [
             { 
                 "description": "reference to dossier base schema",
-                "$ref": "EKuLzS_oN_mIao5og1NOujtF2QMXloiMCZP7xuAR5tY7"
+                "$ref": "ENroDvI_lXRUa3p1UCxU6Pxp0DWDS1yZNexCq_1TQlcj"
             },
             {
                 "type": "object",
@@ -413,7 +413,26 @@ additional fields appropriate to their domain.
   Both fields MAY be present simultaneously: `gov` describes who is
   overseeing the dossier, while `gov_rules` describes what procedural
   constraints applied to the underlying investigation.
-  
+
+- **`attest`**: A declaration the issuer makes in their own voice about the collection, as part of the act of issuing it. An object with a `statement` field holding human-readable text, and a `confirmed` boolean recording whether the issuer affirms that statement. Example: `{"statement": "I certify that the materials enumerated here are complete and accurate to the best of my knowledge.", "confirmed": true}`. The boolean is not redundant with the issuer's anchor. An anchor establishes that the issuer issued this dossier; `confirmed` establishes whether the issuer adopted the declaration it contains, so a dossier can carry a required declaration and record that it was withheld. Where the declaration has legal effect, the exact wording usually comes from the governing framework, and `gov` or `gov_rules` SHOULD identify that framework.
+
+- **`manifest`**: An enumeration of the components the dossier is expected to contain, keyed by an identifier drawn from the governing framework. Each entry is an object carrying at minimum a `status`, and optionally a human-readable `name`, a `reason`, a `due` date, and an `edge` field naming the edge that carries that component's evidence. The following statuses are defined; implementers MAY define others, and SHOULD reference the vocabulary their framework uses:
+
+    * `provided` — the component is present, and `edge` names the edge that carries it.
+    * `pending` — the component is required and will follow, with `due` giving the date it is expected by.
+    * `not_applicable` — the component is not required of this issuer in this instance, with `reason` explaining why.
+    * `withheld` — the component is required, is not supplied, and is not promised, with `reason` recording the grounds.
+
+#### Attesting to Completeness
+
+The [[ref: manifest]] field exists because some dossiers must attest to their own negative space. In most of the patterns this specification describes, a dossier asserts what its issuer gathered, and a verifier's question is whether each item is authentic. In regulated filing, accreditation, audit and discovery, the harder question is the opposite one: is anything missing, and was the omission disclosed? The consequential failure is rarely a forged document. It is an item that was required, was not supplied, and was never mentioned.
+
+A dossier without a manifest cannot distinguish the three cases a supervising authority most needs to tell apart: a component that is absent because it does not apply, one that is absent because it is still coming, and one that is absent because the issuer chose not to supply it. Enumerating every expected component, including the ones with no corresponding edge, makes each of those an explicit, attributable claim rather than an inference from silence — and because the enumeration is inside the dossier, the issuer's anchor commits to it exactly as it commits to the evidence graph. An issuer who omits a required item and marks it `not_applicable` has made a false statement that survives in a duplicity-evident log, which is a materially different position from having simply left it out.
+
+A manifest entry that names an edge does not violate the rule that the `a` section MUST NOT carry evidenta. The entry carries no evidence; it carries the issuer's account of what the collection was supposed to contain, and a pointer to where the corresponding evidence sits in `e`. The evidence itself remains reachable only through edges, and a verifier that ignores the manifest entirely still recovers the full evidence graph. What it loses is the issuer's claim about completeness, which is metadata about the collection rather than a member of it.
+
+Verifiers SHOULD treat manifest processing as semantic validation rather than cryptographic validation. Whether a `withheld` component is acceptable, or a `pending` one is overdue, is a policy question belonging to the governing framework. What this specification requires is that where a manifest entry has `status` `provided`, its `edge` field MUST name an edge that is present in the dossier's `e` section, so that the two accounts of the collection cannot silently disagree.
+
 ## Joint Issuance
 A dossier may be assembled and issued by a single party. For example, an artist who wishes to collect cryptographic evidence of their creations may do so as a solo activity. However, many dossiers snapshot evidence contributions from multiple parties, and so represent a group work product that needs an aggregate approval mechanism. In such cases, authorizing the issuance of the ACDC that references all the individual pieces of evidence is managed with joint issuance.
 
