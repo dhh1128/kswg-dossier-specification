@@ -89,6 +89,14 @@ The primary payload of a dossier is not a set of direct claims, but rather a gra
 A dossier MAY contain an unbounded number of edges, reflecting its core purpose of aggregating an arbitrary quantity and variety of evidence. The field names (keys) for these edges MAY be any valid JSON string, allowing issuers to provide semantically meaningful labels for the linked evidence (e.g.,
 "vettingCredential", "forensicReport_01", "tnAllocationProof"), as demonstrated in the Verifiable Voice Protocol (VVP) specification.
 
+#### The Dossier as Graph Root
+
+Edges point away from the dossier and never back at it. Within any set of ACDCs presented together for evaluation, the dossier under evaluation MUST be the unique source-only node: no other ACDC in that set may carry an edge whose target is the dossier. This is the structural expression of the issuer-centric model described under *Introducing the Dossier*. The dossier points down at the evidence it collects and is not itself collected by anything in the presentation.
+
+The invariant earns its keep at verification time, because it is what lets a verifier find the dossier in a package it was handed rather than one it fetched. Given a bundle of ACDCs, the node that is no edge's target is the root, and a package containing two such nodes, or none, is malformed in a way the verifier can detect before doing any cryptographic work.
+
+The requirement is about a single presentation, not about dossiers in general. A dossier is routinely the target of an edge from *somewhere* — the `prev` edge of its own successor version, an annotation edge in a later version that rules on evidence it carried, an edge from an unrelated dossier that cites it as evidence in turn. None of that violates the invariant. What is forbidden is presenting a dossier for evaluation alongside an ACDC that points at it and expecting the verifier to work out which of the two is the subject. Where an earlier version is genuinely part of what is being presented, the dossier under evaluation is the newest one, and it is that one that must be the unique root.
+
 ### Base JSON-Schema Definition
 
 To ensure a baseline of interoperability while preserving the flexibility required for diverse use cases, all dossiers MUST conform to a base JSON Schema. This specification defines the normative requirements for such a schema.
@@ -325,23 +333,25 @@ The verification process for a dossier requires a citation and a [[ref: referenc
 
 2. Validate dossier integrity: calculate the SAID of the retrieved data and ensure it matches the expected SAID from the citation.
 
-3. Check governance: confirm that the dossier's own schema appears in the governed set named by the acceptance policy, and apply the same test to every credential reached during traversal in step 6. A schema outside the governed set yields INDETERMINATE.
+3. Check the graph root: where the dossier was presented as part of a package rather than fetched by citation, confirm that it is the unique source-only node among the ACDCs presented, as required under *The Dossier as Graph Root*. A package with more than one such node, or none, is INVALID.
 
-4. Determine issuance model: inspect the attributes block for an `fi` [[ref: finalization-identifier, finalization identifier]] and the edges block for a joint-issuance [[ref: threshold-operator, threshold operator]] (`MxN`, `RMxN`, `MxQ`, or `RMxQ`) in an edge group's `o` field.
+4. Check governance: confirm that the dossier's own schema appears in the governed set named by the acceptance policy, and apply the same test to every credential reached during traversal in step 7. A schema outside the governed set yields INDETERMINATE.
 
-5. Validate anchors:
+5. Determine issuance model: inspect the attributes block for an `fi` [[ref: finalization-identifier, finalization identifier]] and the edges block for a joint-issuance [[ref: threshold-operator, threshold operator]] (`MxN`, `RMxN`, `MxQ`, or `RMxQ`) in an edge group's `o` field.
+
+6. Validate anchors:
    a. If `fi` is present and non-null, locate the finalization event in the KEL of the AID it names. Verify that the event carries the threshold-satisfying endorsements for the relevant operator.
    b. If `fi` is absent or null but a threshold operator is present, evaluate each slot in the operator's edge group. A slot is **Endorsed** only when it references an Endorsement ACDC with `disp` `"endorse"` and `act` appropriate to the operation, issued by the expected endorser and anchored in that endorser's KEL. Confirm that the weights (`w`) of the Endorsed slots sum to at least unity (1) — for the qualified operators, using the uniform member weight the operator declares. For the qualified operators, additionally verify that each counted endorsement carries a qualification proof (`e.qp`) that validates against the schema named in the operator's `qs` field.
    c. For standard dossiers with a single issuer, retrieve the issuer's KEL and locate the event anchoring a seal that contains the dossier's SAID — either directly, or by way of a transaction event log whose events the KEL anchors. Verify that anchoring event's signatures against the key state the KEL establishes as authoritative *at that event's position in the log*, not against the key state current at the referenceTime; an anchor remains verifiable across any number of later rotations, and requiring the referenceTime key state would defeat that property. Then confirm that the anchoring event precedes the referenceTime.
    d. Only if the dossier was authenticated by an attached signature under *Ephemeral Dossiers With Attached Signatures*, verify that signature against the issuer's current key state. A verifier MUST reject such a dossier when the referenceTime is not the present, and SHOULD reject it when the dossier was retrieved from a cache or a published location rather than received directly within the transaction it authenticates.
 
-6. Recursive graph traversal: for each named edge in the edges block, fetch the referenced artifact and perform this validation algorithm recursively.
+7. Recursive graph traversal: for each named edge in the edges block, fetch the referenced artifact and perform this validation algorithm recursively.
 
-7. Check revocation status: for the dossier and every node in the evidence graph, consult the relevant KELs or status registries for revocation events effective at the referenceTime.
+8. Check revocation status: for the dossier and every node in the evidence graph, consult the relevant KELs or status registries for revocation events effective at the referenceTime.
 
-8. Check artifact digests: for every node in the graph that is a [[ref: foreign-artifact-wrapper, Foreign Artifact wrapper]] whose artifact accompanies the dossier or is otherwise available to the verifier, recompute the artifact's digest using the algorithm identified by the CESR primitive code of the wrapper's `content_digest`, and compare. A mismatch MUST fail verification, and the verifier SHOULD report which artifact failed. Where the artifact is not available, the wrapper itself may still verify, but the artifact does not: a verifier MUST NOT treat a valid wrapper as evidence that the bytes it describes are intact, and SHOULD report the artifact as unchecked rather than as passing.
+9. Check artifact digests: for every node in the graph that is a [[ref: foreign-artifact-wrapper, Foreign Artifact wrapper]] whose artifact accompanies the dossier or is otherwise available to the verifier, recompute the artifact's digest using the algorithm identified by the CESR primitive code of the wrapper's `content_digest`, and compare. A mismatch MUST fail verification, and the verifier SHOULD report which artifact failed. Where the artifact is not available, the wrapper itself may still verify, but the artifact does not: a verifier MUST NOT treat a valid wrapper as evidence that the bytes it describes are intact, and SHOULD report the artifact as unchecked rather than as passing.
 
-9. Apply semantic rules: apply application-specific policy rules once cryptographic validation is complete.
+10. Apply semantic rules: apply application-specific policy rules once cryptographic validation is complete.
 
 The steps are ordered, and a verifier SHOULD short-circuit on the first that does not pass, since later steps are rarely meaningful once an earlier one has failed. A verifier SHOULD also retain the per-step result, not merely the final outcome. Where a dossier is used for compliance, discovery, or audit, the question asked later is usually not whether verification succeeded but which checks were performed and against what state, and a step-by-step record answers that without requiring the original verifier to be available.
 
