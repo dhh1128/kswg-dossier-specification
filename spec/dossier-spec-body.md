@@ -321,6 +321,21 @@ Because dossiers are designed to be stable, long-lived, and potentially large da
 
 A [[ref: citation]] is a reference that allows a verifier to locate and retrieve the full dossier. The normative requirement for a dossier citation is that it MUST be a resolvable identifier that enables a verifier to fetch the complete and unmodified dossier ACDC. The canonical implementation of this is the Out-of-Band Invitation (OOBI) URL used in the evd (evidence) claim of a VVP passport. An OOBI is a specialized URL that points to a resource serving the ACDC and its associated KERI proofs.
 
+### Presentation as a Self-Contained Package
+
+Citation assumes the verifier goes and gets the dossier. Some dossiers are instead delivered, complete, to a party who is expecting them: a filing submitted to a regulator on a deadline, a disclosure produced to opposing counsel, an evidence package handed to an auditor. In these cases there is no advantage in publishing an OOBI for a recipient who is known in advance, and often a positive requirement not to publish anything at all.
+
+A dossier MAY therefore be presented as a self-contained package: a single transferable unit carrying the dossier, every ACDC reachable from it, the key event logs and transaction event logs needed to establish the key state and revocation status of every issuer in that graph, and any opaque artifacts whose wrappers the dossier references. CESR provides a natural serialization for such a package, and IPEX provides a natural exchange protocol, but this specification does not mandate either.
+
+The defining property is self-containment. A conforming package MUST be verifiable from its own contents alone, with no network access at the time of verification. A verifier SHOULD ingest a package into a fresh, empty datastore and evaluate it there, so that nothing it happens to already know is silently supplying a fact the package failed to carry. A package that verifies only against a populated datastore has not demonstrated what it appears to demonstrate, and the failure will surface later, when an auditor tries to replay it somewhere else.
+
+Two further consequences follow:
+
+- The graph-root invariant described under *The Dossier as Graph Root* is how a verifier identifies which ACDC in the package is the subject of the evaluation.
+- The act of delivery SHOULD itself be authenticated, separately from the dossier's own anchor. A dossier's anchor establishes who assembled the collection and when; it says nothing about who transmitted it, to whom, or under what obligation. Where submission has consequences of its own — a filing deadline, a certification made to a regulator — the submitter SHOULD sign or anchor the transmission, so that the act of submitting is as non-repudiable as the content submitted.
+
+Self-containment is also what makes a package durable evidence rather than a delivery mechanism. The same bytes can be replayed years later, against the same algorithm and the same referenceTime, by someone who was not party to the original exchange and cannot reach anyone who was.
+
 ### Verification: Algorithm for Validation
 
 #### Verification Outcomes
