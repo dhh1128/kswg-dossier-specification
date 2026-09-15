@@ -295,27 +295,55 @@ A [[ref: citation]] is a reference that allows a verifier to locate and retrieve
 
 ### Verification: Algorithm for Validation
 
-The verification process for a dossier requires a citation and a [[ref: reference-time, referenceTime]] as inputs. To support joint issuance, the algorithm follows these steps:
+#### Verification Outcomes
+
+Verification of a dossier yields one of three outcomes. Two of them are the familiar ones; the third exists because of the layered verification described under *Base JSON-Schema Definition*, where cryptographic validation is universal but semantic validation is not.
+
+- **VALID.** Every check in the algorithm below passed, and every credential reachable from the dossier carries a schema the verifier governs. The verifier can act on the dossier.
+- **INVALID.** A check failed definitively: a SAID that does not recompute, an anchor that is absent or made under keys that were not authoritative, a chain that does not reach a trusted root, a credential revoked as of the referenceTime, an artifact whose bytes do not match its committed digest, a violated graph-root invariant. The verifier MUST NOT act on the dossier.
+- **INDETERMINATE.** The structure and the cryptography are sound, but the verifier encountered something it is not competent to judge — most commonly a credential in the graph whose schema is outside the set the verifier governs. Nothing is known to be wrong. The verifier simply cannot say the dossier is good, and MUST NOT treat it as though it could.
+
+The third outcome matters more than it may appear. A dossier is designed to aggregate evidence from domains its verifier may not know, so meeting an unrecognized schema is an ordinary event rather than an error. A verifier with only two outcomes must either reject those dossiers, which makes the extensibility the model depends on unusable, or accept them, which silently confers trust on credentials nobody evaluated. Naming the third case lets a verifier report exactly what it could not decide, and lets a governing framework decide whether that is tolerable in its context.
+
+A verifier MUST return INVALID rather than INDETERMINATE whenever a check fails definitively, even if an unrecognized schema is also present: an established failure is not made uncertain by the presence of an unknown. Conversely, a verifier MUST NOT return VALID for a dossier containing any node it could not evaluate.
+
+#### Verifier Acceptance Policy
+
+INDETERMINATE is only decidable if "what the verifier governs" is a stated set rather than an implicit one. A conforming verifier therefore operates under an explicit acceptance policy, configured in advance and independent of any particular dossier. The policy MUST state at least:
+
+- **Governed schema SAIDs.** The set of schemas the verifier is competent to evaluate. A credential reachable from the dossier whose `s` falls outside this set yields INDETERMINATE.
+- **Trusted root AIDs.** The identifiers at which an authority chain must terminate. A chain that terminates anywhere else yields INVALID; it is not an unknown, it is a chain to the wrong root.
+- **Reference time.** The instant as of which revocation and validity are evaluated, as described under [[ref: reference-time, referenceTime]].
+
+Stating the policy explicitly, rather than letting it emerge from whatever schemas an implementation happens to have cached, is what makes two verifiers' verdicts comparable, and what lets a verifier explain a refusal in terms a submitter can act on.
+
+#### The Algorithm
+
+The verification process for a dossier requires a citation and a [[ref: reference-time, referenceTime]] as inputs, together with the acceptance policy above. To support joint issuance, the algorithm follows these steps:
 
 1. Fetch dossier: resolve the citation to retrieve the dossier ACDC.
 
 2. Validate dossier integrity: calculate the SAID of the retrieved data and ensure it matches the expected SAID from the citation.
 
-3. Determine issuance model: inspect the attributes block for an `fi` [[ref: finalization-identifier, finalization identifier]] and the edges block for a joint-issuance [[ref: threshold-operator, threshold operator]] (`MxN`, `RMxN`, `MxQ`, or `RMxQ`) in an edge group's `o` field.
+3. Check governance: confirm that the dossier's own schema appears in the governed set named by the acceptance policy, and apply the same test to every credential reached during traversal in step 6. A schema outside the governed set yields INDETERMINATE.
 
-4. Validate anchors:
+4. Determine issuance model: inspect the attributes block for an `fi` [[ref: finalization-identifier, finalization identifier]] and the edges block for a joint-issuance [[ref: threshold-operator, threshold operator]] (`MxN`, `RMxN`, `MxQ`, or `RMxQ`) in an edge group's `o` field.
+
+5. Validate anchors:
    a. If `fi` is present and non-null, locate the finalization event in the KEL of the AID it names. Verify that the event carries the threshold-satisfying endorsements for the relevant operator.
    b. If `fi` is absent or null but a threshold operator is present, evaluate each slot in the operator's edge group. A slot is **Endorsed** only when it references an Endorsement ACDC with `disp` `"endorse"` and `act` appropriate to the operation, issued by the expected endorser and anchored in that endorser's KEL. Confirm that the weights (`w`) of the Endorsed slots sum to at least unity (1) — for the qualified operators, using the uniform member weight the operator declares. For the qualified operators, additionally verify that each counted endorsement carries a qualification proof (`e.qp`) that validates against the schema named in the operator's `qs` field.
    c. For standard dossiers with a single issuer, retrieve the issuer's KEL and locate the event anchoring a seal that contains the dossier's SAID — either directly, or by way of a transaction event log whose events the KEL anchors. Verify that anchoring event's signatures against the key state the KEL establishes as authoritative *at that event's position in the log*, not against the key state current at the referenceTime; an anchor remains verifiable across any number of later rotations, and requiring the referenceTime key state would defeat that property. Then confirm that the anchoring event precedes the referenceTime.
    d. Only if the dossier was authenticated by an attached signature under *Ephemeral Dossiers With Attached Signatures*, verify that signature against the issuer's current key state. A verifier MUST reject such a dossier when the referenceTime is not the present, and SHOULD reject it when the dossier was retrieved from a cache or a published location rather than received directly within the transaction it authenticates.
 
-5. Recursive graph traversal: for each named edge in the edges block, fetch the referenced artifact and perform this validation algorithm recursively.
+6. Recursive graph traversal: for each named edge in the edges block, fetch the referenced artifact and perform this validation algorithm recursively.
 
-6. Check revocation status: for the dossier and every node in the evidence graph, consult the relevant KELs or status registries for revocation events effective at the referenceTime.
+7. Check revocation status: for the dossier and every node in the evidence graph, consult the relevant KELs or status registries for revocation events effective at the referenceTime.
 
-7. Check artifact digests: for every node in the graph that is a [[ref: foreign-artifact-wrapper, Foreign Artifact wrapper]] whose artifact accompanies the dossier or is otherwise available to the verifier, recompute the artifact's digest using the algorithm identified by the CESR primitive code of the wrapper's `content_digest`, and compare. A mismatch MUST fail verification, and the verifier SHOULD report which artifact failed. Where the artifact is not available, the wrapper itself may still verify, but the artifact does not: a verifier MUST NOT treat a valid wrapper as evidence that the bytes it describes are intact, and SHOULD report the artifact as unchecked rather than as passing.
+8. Check artifact digests: for every node in the graph that is a [[ref: foreign-artifact-wrapper, Foreign Artifact wrapper]] whose artifact accompanies the dossier or is otherwise available to the verifier, recompute the artifact's digest using the algorithm identified by the CESR primitive code of the wrapper's `content_digest`, and compare. A mismatch MUST fail verification, and the verifier SHOULD report which artifact failed. Where the artifact is not available, the wrapper itself may still verify, but the artifact does not: a verifier MUST NOT treat a valid wrapper as evidence that the bytes it describes are intact, and SHOULD report the artifact as unchecked rather than as passing.
 
-8. Apply semantic rules: apply application-specific policy rules once cryptographic validation is complete.
+9. Apply semantic rules: apply application-specific policy rules once cryptographic validation is complete.
+
+The steps are ordered, and a verifier SHOULD short-circuit on the first that does not pass, since later steps are rarely meaningful once an earlier one has failed. A verifier SHOULD also retain the per-step result, not merely the final outcome. Where a dossier is used for compliance, discovery, or audit, the question asked later is usually not whether verification succeeded but which checks were performed and against what state, and a step-by-step record answers that without requiring the original verifier to be available.
 
 ### The Attributes Section: Proximate Metadata
 
