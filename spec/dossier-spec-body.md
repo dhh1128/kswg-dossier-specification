@@ -211,6 +211,17 @@ requirements:
    CESR-encoded hash, and a `content_type` field holding an IANA MIME type
    string.
 3. The `content_digest` SHOULD be a bSAID or xSAID as defined in [[8]].
+4. Its `a` section MUST contain a `filename` field when `content_digest` holds
+   an xSAID, and SHOULD contain one otherwise.
+
+The `filename` requirement follows from how the externalized SAID algorithm
+works. An xSAID is carried in the artifact's filename rather than in its bytes,
+so the filename is an input to the identifier rather than incidental packaging.
+A wrapper that omits it leaves a verifier unable to recompute what the wrapper
+committed to. For bSAIDs and plain hashes the filename is not load-bearing, but
+recording it is still worthwhile: it is what lets a verifier report *which*
+artifact failed when a digest does not match, and artifacts routinely travel
+alongside a dossier as a set of files rather than one at a time.
 
 A reference schema and example for a Foreign Artifact ACDC are published
 separately at [[9]]. Implementers MAY define specialized schemas that
