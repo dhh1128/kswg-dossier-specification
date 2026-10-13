@@ -97,6 +97,8 @@ That structure does not by itself tell a verifier which ACDC is the dossier. A v
 
 Within any set of ACDCs presented together for evaluation, the dossier under evaluation MUST be the only ACDC that no other ACDC in the set points to. A verifier finds the dossier by finding that ACDC. If more than one ACDC in the set qualifies, the set is malformed, and the verifier can reject it before doing any cryptographic work.
 
+This rule is not peculiar to dossiers. The ACDC specification [[2]] already requires that the graph disclosed in any one issuance or presentation exchange (IPEX) have a single source node, its origin node, and that several unchained ACDCs be gathered under a bespoke ACDC whose edges reach all of them. A dossier is such an origin node, and this section applies the same requirement to anything presented with it.
+
 The rule governs a single presentation, not dossiers in general. Other ACDCs often point at a dossier: a later version points at an earlier one through its `prev` edge or an annotation edge, and an unrelated dossier may cite it as evidence. Those ACDCs are legitimate. They cannot be presented alongside a dossier they point at, unless one of them is itself the subject. For example, if versions 1 and 2 of a dossier are presented together, version 2's `prev` edge points at version 1, so version 2 is the only ACDC nothing points to, and it is the dossier under evaluation.
 
 ### Base JSON-Schema Definition
